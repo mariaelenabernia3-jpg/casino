@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro - KRULE</title>
+    <link rel="stylesheet" href="style-forms.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto&family=Cinzel:wght@700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+ 
+    <a href="lobby.html" class="back-to-lobby-link" title="Volver al Lobby">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+    </a>
+   
+
+    <div class="form-container">
+        <h1 class="form-title">Crear Cuenta</h1>
+        <form id="register-form">
+            <div class="input-group">
+                <input type="text" id="username" class="input-field" placeholder="Elige un nombre de usuario" required>
+            </div>
+            <div class="input-group">
+                <input type="password" id="password" class="input-field" placeholder="Crea una contraseña" required>
+            </div>
+            <div class="input-group">
+                <input type="password" id="confirm-password" class="input-field" placeholder="Confirma la contraseña" required>
+            </div>
+            <p id="error-message" class="error-message"></p>
+            <button type="submit" class="submit-button">Registrarse</button>
+        </form>
+        <p class="form-link">¿Ya tienes una cuenta? <a href="login.html">Inicia sesión aquí</a></p>
+    </div>
+
+    <script>
+       
+        const form = document.getElementById('register-form');
+        const errorMessage = document.getElementById('error-message');
+        form.addEventListener('submit', function(event) {
+            event.preventDefault();
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
+            if (password !== confirmPassword) { showError('Las contraseñas no coinciden.'); return; }
+            const users = JSON.parse(localStorage.getItem('kruleUsers')) || [];
+            const userExists = users.find(user => user.username === username);
+            if (userExists) { showError('Ese nombre de usuario ya está en uso.'); return; }
+            const newUser = { username, password };
+            users.push(newUser);
+            localStorage.setItem('kruleUsers', JSON.stringify(users));
+            alert('¡Registro exitoso! Ahora puedes iniciar sesión.');
+            window.location.href = 'login.html';
+        });
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.style.display = 'block';
+        }
+    </script>
+</body>
+</html>
