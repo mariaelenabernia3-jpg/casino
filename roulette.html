@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ruleta Diaria - KRULE</title>
+    <link rel="stylesheet" href="style-roulette.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@700&family=Cinzel:wght@700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <a href="lobby.html" class="back-to-lobby-link" title="Volver al Lobby">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+    </a>
+
+    <div class="roulette-container">
+        <h1 class="title">Ruleta Diaria</h1>
+        <div class="wheel-wrapper">
+            <div class="wheel-pointer"></div>
+            <div class="wheel" id="wheel">
+                
+            </div>
+        </div>
+
+<div class="action-area" id="action-area">
+    <button class="spin-button" id="spin-button">GIRAR</button>
+    
+    <div class="timer-container" id="timer-container" style="display: none;">
+        <p>Próximo giro disponible en:</p>
+        <div class="timer" id="timer">23:59:59</div>
+    </div>
+</div>
+    
+    <script src="script-roulette.js"></script>
+</body>
+</html>
