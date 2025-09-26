@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale-1.0">
+    <title>KRULE - Salón de Juegos</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;700&family=Cinzel:wght@700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-green: #00f9a4;
+            --dark-background: #0a0a0a;
+            --card-background: #1a1a1a;
+            --text-color: #EAEAEA;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--dark-background);
+            color: var(--text-color);
+            animation: fadeIn 1s ease-in;
+        }
+
+        
+        .main-header {
+            display: flex;
+            justify-content: space-between; 
+            align-items: center;
+            padding: 15px 40px;
+            background-color: #111;
+            border-bottom: 1px solid #222;
+        }
+
+        .logo {
+            font-family: 'Cinzel', serif;
+            font-size: 2em;
+            color: var(--primary-green);
+            text-shadow: 0 0 10px rgba(0, 249, 164, 0.5);
+        }
+
+        
+        .register-button {
+            font-family: 'Roboto', sans-serif;
+            font-weight: 700;
+            text-decoration: none;
+            color: var(--primary-green);
+            border: 2px solid var(--primary-green);
+            padding: 10px 20px;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+        }
+
+        .register-button:hover {
+            background-color: var(--primary-green);
+            color: var(--dark-background);
+            box-shadow: 0 0 15px rgba(0, 249, 164, 0.5);
+        }
+
+        
+        .lobby-container {
+            padding: 40px;
+            text-align: center;
+        }
+
+        .lobby-title {
+            font-family: 'Cinzel', serif;
+            font-size: 3em;
+            margin-bottom: 40px;
+        }
+
+        
+        .game-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .game-card {
+            background-color: var(--card-background);
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid #333;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            transition: all 0.3s ease;
+            cursor: default; 
+        }
+        
+        
+        .game-card:hover {
+            transform: translateY(-10px);
+            border-color: var(--primary-green);
+            box-shadow: 0 8px 30px rgba(0, 249, 164, 0.2);
+        }
+
+        .game-card-image {
+            height: 150px;
+            background-color: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 3em;
+        }
+
+        .game-card-content {
+            padding: 20px;
+            text-align: left;
+        }
+        
+        .game-card-title {
+            font-size: 1.5em;
+            margin: 0 0 10px 0;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+
+    <header class="main-header">
+        <div class="logo">KRULE</div>
+        
+        <a href="#" class="register-button">Regístrate</a>
+    </header>
+
+    <main class="lobby-container">
+        <h1 class="lobby-title">Nuestros Juegos</h1>
+
+        <div class="game-grid">
+            
+            <div class="game-card">
+                <div class="game-card-image">🚀</div>
+                <div class="game-card-content">
+                    <h2 class="game-card-title">Crash</h2>
+                </div>
+            </div>
+
+            
+            <div class="game-card">
+                <div class="game-card-image">🎰</div>
+                <div class="game-card-content">
+                    <h2 class="game-card-title">Tragamonedas</h2>
+                </div>
+            </div>
+
+            
+            <div class="game-card">
+                <div class="game-card-image">🎱</div>
+                <div class="game-card-content">
+                    <h2 class="game-card-title">Ruleta</h2>
+                </div>
+            </div>
+        </div>
+    </main>
+
+</body>
+</html>
