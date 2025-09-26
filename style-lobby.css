@@ -1,0 +1,126 @@
+
+:root {
+    --primary-green: #00f9a4;
+    --dark-background: #0a0a0a;
+    --card-background: #1a1a1a;
+    --text-color: #EAEAEA;
+    --error-color: #ff4d4d;
+}
+
+body { margin: 0; font-family: 'Roboto', sans-serif; background-color: var(--dark-background); color: var(--text-color); animation: fadeIn 1s ease-in; }
+.main-header { display: flex; justify-content: space-between; align-items: center; padding: 15px 40px; background-color: #111; border-bottom: 1px solid #222; }
+.logo { font-family: 'Cinzel', serif; font-size: 2em; color: var(--primary-green); text-shadow: 0 0 10px rgba(0, 249, 164, 0.5); }
+.register-button { font-family: 'Roboto', sans-serif; font-weight: 700; text-decoration: none; color: var(--primary-green); border: 2px solid var(--primary-green); padding: 10px 20px; border-radius: 5px; transition: all 0.3s ease; }
+.register-button:hover { background-color: var(--primary-green); color: var(--dark-background); box-shadow: 0 0 15px rgba(0, 249, 164, 0.5); }
+.lobby-container { padding: 40px; text-align: center; }
+.lobby-title { font-family: 'Cinzel', serif; font-size: 3em; margin-bottom: 40px; }
+.game-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 30px; max-width: 1200px; margin: 0 auto; }
+.game-card { background-color: var(--card-background); border-radius: 10px; overflow: hidden; border: 1px solid #333; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5); transition: all 0.3s ease; cursor: default; }
+.game-card:hover { transform: translateY(-10px); border-color: var(--primary-green); box-shadow: 0 8px 30px rgba(0, 249, 164, 0.2); }
+.game-card-image { height: 150px; background-color: #000; display: flex; justify-content: center; align-items: center; font-size: 3em; }
+.game-card-content { padding: 20px; text-align: left; }
+.game-card-title { font-size: 1.5em; margin: 0 0 10px 0; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+
+.profile-container {
+    position: relative; 
+}
+
+.profile-icon {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%; 
+    background-color: var(--card-background);
+    border: 2px solid var(--primary-green);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.profile-icon:hover {
+    background-color: #2a2a2a;
+}
+
+.profile-icon svg {
+    stroke: var(--primary-green);
+    width: 24px;
+    height: 24px;
+}
+
+.profile-panel {
+    display: none; 
+    position: absolute;
+    top: 60px; 
+    right: 0;
+    width: 220px;
+    background-color: var(--card-background);
+    border-radius: 8px;
+    box-shadow: 0 5px 25px rgba(0, 0, 0, 0.7);
+    padding: 20px;
+    text-align: center;
+    border: 1px solid #333;
+    z-index: 100;
+}
+
+.username-display {
+    color: var(--primary-green);
+    font-weight: bold;
+    font-size: 1.4em;
+    margin-top: 5px;
+    word-wrap: break-word; 
+}
+
+.logout-button {
+    width: 100%;
+    margin-top: 15px;
+    background: transparent;
+    border: 1px solid var(--error-color);
+    color: var(--error-color);
+    padding: 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.3s ease;
+}
+
+.logout-button:hover {
+    background-color: var(--error-color);
+    color: #fff;
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 20px; 
+}
+
+.coin-balance-display {
+    display: flex;
+    align-items: center;
+    background-color: var(--card-background);
+    padding: 5px 15px;
+    border-radius: 20px;
+    border: 1px solid #333;
+}
+
+.coin-icon {
+    width: 24px;
+    height: 24px;
+    margin-right: 10px;
+}
+
+#balance-amount {
+    font-size: 1.2em;
+    font-weight: bold;
+    color: var(--primary-green);
+}
+
+.profile-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
