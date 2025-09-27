@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', function() {
-   
+    
     const registerLink = document.getElementById('register-link');
     const profileSection = document.getElementById('profile-section');
     const balanceAmount = document.getElementById('balance-amount');
@@ -9,12 +9,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const profilePicInput = document.getElementById('profile-pic-input');
     const headerUsername = document.getElementById('header-username');
     
-    
     const settingsIcon = document.getElementById('settings-icon');
     const profilePanel = document.getElementById('profile-panel');
     const logoutButton = document.getElementById('logout-button');
     
-  
     const panelUsernameDisplay = document.getElementById('panel-username-display');
     const editUsernameIcon = document.getElementById('edit-username-icon');
     const editUsernameForm = document.getElementById('edit-username-form');
@@ -24,43 +22,35 @@ document.addEventListener('DOMContentLoaded', function() {
     const editErrorMessage = document.getElementById('edit-error-message');
 
     let loggedInUser = null;
-    const defaultProfileIconSVG = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="%2300f9a4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>';
+    
+    const defaultProfileIconSVG = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="%2300f9a4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>';
 
-   
+    
     function initializeLobby() {
         loggedInUser = localStorage.getItem('loggedInUser');
         if (loggedInUser) {
-         
             registerLink.style.display = 'none';
             profileSection.style.display = 'flex';
 
             const users = JSON.parse(localStorage.getItem('kruleUsers')) || [];
             let currentUser = users.find(user => user.username === loggedInUser);
-
+            
             if (currentUser) {
                
-                if (typeof currentUser.coins === 'undefined') {
-                    currentUser.coins = 0;
-                    const userIndex = users.findIndex(user => user.username === loggedInUser);
-                    users[userIndex] = currentUser;
-                    localStorage.setItem('kruleUsers', JSON.stringify(users));
+                if (typeof currentUser.coins === 'undefined') { 
+                    currentUser.coins = 1000;
+                    updateUserData(currentUser); 
                 }
                 
-               
                 profilePicImg.src = currentUser.profilePic || defaultProfileIconSVG;
 
-               
                 headerUsername.textContent = currentUser.username;
                 panelUsernameDisplay.textContent = currentUser.username;
-
-               
-                balanceAmount.textContent = Math.floor(currentUser.coins); 
-            } else {
-                
-                logout();
+                balanceAmount.textContent = currentUser.coins;
+            } else { 
+                logout(); 
             }
         } else {
-            
             registerLink.style.display = 'block';
             profileSection.style.display = 'none';
         }
@@ -70,78 +60,59 @@ document.addEventListener('DOMContentLoaded', function() {
         const file = event.target.files[0];
         if (!file) return;
 
-        const MAX_SIZE_KB = 500;
-        if (file.size > MAX_SIZE_KB * 1024) {
-            alert(`¡La imagen es demasiado grande! (Máx. ${MAX_SIZE_KB} KB)`);
-            return;
-        }
-
         const reader = new FileReader();
         reader.onload = function(e) {
-            const dataURL = e.target.result;
-            
-            let users = JSON.parse(localStorage.getItem('kruleUsers')) || [];
-            const userIndex = users.findIndex(user => user.username === loggedInUser);
-            if (userIndex !== -1) {
-                users[userIndex].profilePic = dataURL;
-                localStorage.setItem('kruleUsers', JSON.stringify(users));
-                
-                profilePicImg.src = dataURL;
-                alert('Foto de perfil actualizada.');
+            const users = JSON.parse(localStorage.getItem('kruleUsers')) || [];
+            let currentUser = users.find(user => user.username === loggedInUser);
+            if(currentUser) {
+                currentUser.profilePic = e.target.result;
+                profilePicImg.src = e.target.result;
+                updateUserData(currentUser);
+                alert("Foto de perfil actualizada.");
             }
         };
         reader.readAsDataURL(file);
     }
     
     function showEditForm() {
-        panelUsernameDisplay.style.display = 'none';
+        panelUsernameDisplay.style.display = 'none'; 
         editUsernameIcon.style.display = 'none';
         editUsernameForm.style.display = 'flex';
         newUsernameInput.value = loggedInUser;
         newUsernameInput.focus();
         editErrorMessage.textContent = '';
     }
-
     function hideEditForm() {
-        panelUsernameDisplay.style.display = 'block';
+        panelUsernameDisplay.style.display = 'block'; 
         editUsernameIcon.style.display = 'block';
         editUsernameForm.style.display = 'none';
         editErrorMessage.textContent = '';
     }
-
+    
     function saveNewUsername() {
-        const oldName = loggedInUser;
         const newName = newUsernameInput.value.trim();
-        const users = JSON.parse(localStorage.getItem('kruleUsers')) || [];
-
-        if (newName === '') {
-            editErrorMessage.textContent = 'El nombre no puede estar vacío.';
-            return;
-        }
-        if (newName === oldName) {
+        if (newName === loggedInUser) {
             hideEditForm();
             return;
         }
-        const nameExists = users.some(user => user.username.toLowerCase() === newName.toLowerCase());
-        if (nameExists) {
+        if (newName.length < 3) {
+            editErrorMessage.textContent = 'El nombre debe tener al menos 3 caracteres.';
+            return;
+        }
+
+        const users = JSON.parse(localStorage.getItem('kruleUsers')) || [];
+        if (users.some(user => user.username === newName)) {
             editErrorMessage.textContent = 'Ese nombre ya está en uso.';
             return;
         }
 
-        const userIndex = users.findIndex(user => user.username === oldName);
-        if (userIndex !== -1) {
-            users[userIndex].username = newName;
+        let currentUser = users.find(user => user.username === loggedInUser);
+        if (currentUser) {
+            currentUser.username = newName;
             localStorage.setItem('loggedInUser', newName);
-
-            const lastSpinData = localStorage.getItem(`lastSpin_${oldName}`);
-            if (lastSpinData) {
-                localStorage.setItem(`lastSpin_${newName}`, lastSpinData);
-                localStorage.removeItem(`lastSpin_${oldName}`);
-            }
-            
-            localStorage.setItem('kruleUsers', JSON.stringify(users));
-            
-            alert('¡Nombre de usuario actualizado con éxito!');
+            loggedInUser = newName;
+            updateUserData(currentUser, users);
+            alert('¡Nombre de usuario actualizado!');
             hideEditForm();
             initializeLobby(); 
         }
@@ -149,29 +120,34 @@ document.addEventListener('DOMContentLoaded', function() {
     
     function logout() {
         localStorage.removeItem('loggedInUser');
-        alert('Has cerrado sesión.');
         window.location.href = 'lobby.html';
     }
 
-    
+    function updateUserData(userToUpdate, allUsers) {
+        const users = allUsers || JSON.parse(localStorage.getItem('kruleUsers')) || [];
+        const userIndex = users.findIndex(user => user.username === loggedInUser || user.username === userToUpdate.username);
+        if (userIndex !== -1) {
+            users[userIndex] = userToUpdate;
+            localStorage.setItem('kruleUsers', JSON.stringify(users));
+        }
+    }
+
     settingsIcon.addEventListener('click', () => {
-        profilePanel.style.display = (profilePanel.style.display === 'block') ? 'none' : 'block';
-        hideEditForm(); 
+        const isPanelVisible = profilePanel.style.display === 'block';
+        profilePanel.style.display = isPanelVisible ? 'none' : 'block';
+        if (isPanelVisible) {
+            hideEditForm();
+        }
     });
     
     profilePicContainer.addEventListener('click', () => profilePicInput.click());
     profilePicInput.addEventListener('change', handleProfilePicChange);
-    
     logoutButton.addEventListener('click', logout);
     
     editUsernameIcon.addEventListener('click', showEditForm);
     cancelEditButton.addEventListener('click', hideEditForm);
     saveUsernameButton.addEventListener('click', saveNewUsername);
-    newUsernameInput.addEventListener('keydown', (event) => {
-        if (event.key === 'Enter') {
-            saveNewUsername();
-        }
-    });
+    newUsernameInput.addEventListener('keydown', (event) => { if (event.key === 'Enter') saveNewUsername(); });
 
     initializeLobby();
 });
