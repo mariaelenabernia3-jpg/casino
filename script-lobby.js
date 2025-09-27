@@ -1,5 +1,18 @@
 document.addEventListener('DOMContentLoaded', function() {
     
+    const lobbyMusic = document.getElementById('lobby-music');
+    if (lobbyMusic) {
+        
+        const playPromise = lobbyMusic.play();
+
+        if (playPromise !== undefined) {
+            playPromise.catch(error => {
+            
+                console.error("La reproducción automática de la música fue bloqueada por el navegador:", error);
+            });
+        }
+    }
+
     const registerLink = document.getElementById('register-link');
     const profileSection = document.getElementById('profile-section');
     const balanceAmount = document.getElementById('balance-amount');
