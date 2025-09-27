@@ -70,16 +70,18 @@ body { margin: 0; font-family: 'Roboto', sans-serif; background-color: var(--dar
         gap: 15px;
     }
     .logo { font-size: 1.5em; }
-    .header-username, #balance-amount {
-        display: none; 
+    
+    .header-username {
+        display: none;
     }
+
     .coin-balance-display {
         background: none;
         border: none;
         padding: 0;
     }
     .profile-panel {
-        width: 200px; 
+        width: 200px;
     }
     .lobby-container { padding: 20px; }
     .lobby-title { font-size: 2.2em; }
