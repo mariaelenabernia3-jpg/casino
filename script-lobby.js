@@ -1,132 +1,178 @@
-document.addEventListener('DOMContentLoaded', () => {
-    const wheel = document.getElementById('wheel');
-    const spinButton = document.getElementById('spin-button');
-    const timerContainer = document.getElementById('timer-container');
-    const timerDisplay = document.getElementById('timer');
-
+document.addEventListener('DOMContentLoaded', function() {
     
-    const prizes = [
-        { value: 10,   label: '10',  weight: 40 }, { value: 25,   label: '25',  weight: 25 },
-        { value: 50,   label: '50',  weight: 15 }, { value: 100,  label: '100', weight: 8 },
-        { value: 250,  label: '250', weight: 5 }, { value: 500,  label: '500', weight: 4 },
-        { value: 1000, label: '1k',  weight: 2 }, { value: 5000, label: '5k',  weight: 1 }
-    ];
-    const totalWeight = prizes.reduce((acc, prize) => acc + prize.weight, 0);
-    const segmentAngle = 360 / prizes.length;
-    let loggedInUser = null;
-    let users = [];
+    const lobbyMusic = document.getElementById('lobby-music');
 
-    function initialize() { 
-        loggedInUser = localStorage.getItem('loggedInUser');
-        if (!loggedInUser) {
-            alert('Debes iniciar sesión para jugar.');
-            window.location.href = 'login.html';
-            return;
+    if (localStorage.getItem('kruleAudioPermission') === 'true') {
+        if (lobbyMusic) {
+            lobbyMusic.play().catch(e => {
+                console.warn("Autoplay bloqueado, se activará con el primer clic.", e);
+                addFallbackClickListener();
+            });
         }
-        users = JSON.parse(localStorage.getItem('kruleUsers')) || [];
-        drawWheel();
-        checkCooldown();
+        localStorage.removeItem('kruleAudioPermission');
+    } else {
+        addFallbackClickListener();
     }
 
-    
-    function drawWheel() { 
-        prizes.forEach((prize, i) => {
-            const segment = document.createElement('div');
-            segment.className = 'prize';
-            segment.style.transform = `rotate(${segmentAngle * i}deg)`;
-            const prizeLabel = document.createElement('span');
-            prizeLabel.textContent = prize.label;
-            segment.appendChild(prizeLabel);
-            wheel.appendChild(segment);
+    function addFallbackClickListener() {
+        function playMusicOnFirstInteraction() {
+            if (lobbyMusic && lobbyMusic.paused) {
+                lobbyMusic.play().catch(e => console.error("Error al intentar reproducir música con clic.", e));
+            }
+        }
+        document.addEventListener('click', playMusicOnFirstInteraction, { once: true });
+    }
+
+    const blackjackLink = document.getElementById('blackjack-link');
+    if (blackjackLink) {
+        blackjackLink.addEventListener('click', () => {
+            localStorage.setItem('kruleAudioPermission', 'true');
         });
     }
+    
+    const registerLink = document.getElementById('register-link');
+    const profileSection = document.getElementById('profile-section');
+    const balanceAmount = document.getElementById('balance-amount');
+    
+    const profilePicContainer = document.getElementById('profile-pic-container');
+    const profilePicImg = document.getElementById('profile-pic-img');
+    const profilePicInput = document.getElementById('profile-pic-input');
+    const headerUsername = document.getElementById('header-username');
+    
+    const settingsIcon = document.getElementById('settings-icon');
+    const profilePanel = document.getElementById('profile-panel');
+    const logoutButton = document.getElementById('logout-button');
+    
+    const panelUsernameDisplay = document.getElementById('panel-username-display');
+    const editUsernameIcon = document.getElementById('edit-username-icon');
+    const editUsernameForm = document.getElementById('edit-username-form');
+    const newUsernameInput = document.getElementById('new-username-input');
+    const saveUsernameButton = document.getElementById('save-username-button');
+    const cancelEditButton = document.getElementById('cancel-edit-button');
+    const editErrorMessage = document.getElementById('edit-error-message');
+
+    let loggedInUser = null;
+    
+    const defaultProfileIconSVG = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="%2300f9a4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>';
 
     
-    function checkCooldown() {
-        const lastSpin = localStorage.getItem(`lastSpin_${loggedInUser}`);
-        if (!lastSpin) {
+    function initializeLobby() {
+        loggedInUser = localStorage.getItem('loggedInUser');
+        if (loggedInUser) {
+            registerLink.style.display = 'none';
+            profileSection.style.display = 'flex';
+
+            const users = JSON.parse(localStorage.getItem('kruleUsers')) || [];
+            let currentUser = users.find(user => user.username === loggedInUser);
             
-            spinButton.style.display = 'block';
-            spinButton.disabled = false;
-            timerContainer.style.display = 'none';
+            if (currentUser) {
+                
+                if (typeof currentUser.coins === 'undefined') { 
+                    currentUser.coins = 0; 
+                    updateUserData(currentUser); 
+                }
+                profilePicImg.src = currentUser.profilePic || defaultProfileIconSVG;
+                headerUsername.textContent = currentUser.username;
+                panelUsernameDisplay.textContent = currentUser.username;
+                balanceAmount.textContent = currentUser.coins;
+            } else { 
+                logout(); 
+            }
+        } else {
+            registerLink.style.display = 'block';
+            profileSection.style.display = 'none';
+        }
+    }
+
+    function handleProfilePicChange(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const users = JSON.parse(localStorage.getItem('kruleUsers')) || [];
+            let currentUser = users.find(user => user.username === loggedInUser);
+            if(currentUser) {
+                currentUser.profilePic = e.target.result;
+                profilePicImg.src = e.target.result;
+                updateUserData(currentUser);
+                alert("Foto de perfil actualizada.");
+            }
+        };
+        reader.readAsDataURL(file);
+    }
+    
+    function showEditForm() {
+        panelUsernameDisplay.style.display = 'none'; 
+        editUsernameIcon.style.display = 'none';
+        editUsernameForm.style.display = 'flex';
+        newUsernameInput.value = loggedInUser;
+        newUsernameInput.focus();
+        editErrorMessage.textContent = '';
+    }
+    function hideEditForm() {
+        panelUsernameDisplay.style.display = 'block'; 
+        editUsernameIcon.style.display = 'block';
+        editUsernameForm.style.display = 'none';
+        editErrorMessage.textContent = '';
+    }
+    
+    function saveNewUsername() {
+        const newName = newUsernameInput.value.trim();
+        if (newName === loggedInUser) {
+            hideEditForm();
             return;
         }
-
-        const cooldownEnd = parseInt(lastSpin) + (24 * 60 * 60 * 1000);
-        const now = new Date().getTime();
-
-        if (now < cooldownEnd) {
-           
-            spinButton.style.display = 'none'; 
-            timerContainer.style.display = 'block'; 
-            startCountdown(cooldownEnd);
-        } else {
-            
-            spinButton.style.display = 'block';
-            spinButton.disabled = false;
-            timerContainer.style.display = 'none';
-            localStorage.removeItem(`lastSpin_${loggedInUser}`);
+        if (newName.length < 3) {
+            editErrorMessage.textContent = 'El nombre debe tener al menos 3 caracteres.';
+            return;
+        }
+        const users = JSON.parse(localStorage.getItem('kruleUsers')) || [];
+        if (users.some(user => user.username === newName)) {
+            editErrorMessage.textContent = 'Ese nombre ya está en uso.';
+            return;
+        }
+        let currentUser = users.find(user => user.username === loggedInUser);
+        if (currentUser) {
+            currentUser.username = newName;
+            localStorage.setItem('loggedInUser', newName);
+            loggedInUser = newName;
+            updateUserData(currentUser, users);
+            alert('¡Nombre de usuario actualizado!');
+            hideEditForm();
+            initializeLobby(); 
         }
     }
     
-    let countdownInterval;
-    function startCountdown(endTime) { 
-        clearInterval(countdownInterval);
-        countdownInterval = setInterval(() => {
-            const now = new Date().getTime();
-            const distance = endTime - now;
-            if (distance < 0) {
-                clearInterval(countdownInterval);
-                checkCooldown(); 
-                return;
-            }
-            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-            timerDisplay.textContent = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-        }, 1000);
+    function logout() {
+        localStorage.removeItem('loggedInUser');
+        window.location.href = 'lobby.html';
     }
 
-   
-    function spinWheel() { 
-        spinButton.disabled = true;
-        const random = Math.random() * totalWeight;
-        let cumulativeWeight = 0;
-        let winningPrize = prizes[0];
-        let winningIndex = 0;
-        for (let i = 0; i < prizes.length; i++) {
-            cumulativeWeight += prizes[i].weight;
-            if (random < cumulativeWeight) {
-                winningPrize = prizes[i];
-                winningIndex = i;
-                break;
-            }
+    function updateUserData(userToUpdate, allUsers) {
+        const users = allUsers || JSON.parse(localStorage.getItem('kruleUsers')) || [];
+        const userIndex = users.findIndex(user => user.username === loggedInUser || user.username === userToUpdate.username);
+        if (userIndex !== -1) {
+            users[userIndex] = userToUpdate;
+            localStorage.setItem('kruleUsers', JSON.stringify(users));
         }
-
-        // --- CORRECCIÓN REALIZADA AQUÍ ---
-        // La fórmula original no apuntaba al centro de la etiqueta del premio, causando el desfase.
-        // Esta nueva fórmula calcula el ángulo necesario para alinear el centro exacto del sector con el puntero.
-        const targetAngle = (360 - (segmentAngle * winningIndex)) - (segmentAngle / 2);
-        
-        // Se mantiene un pequeño desfase aleatorio para que no caiga siempre en el mismo punto exacto.
-        const randomOffset = (Math.random() - 0.5) * (segmentAngle * 0.8);
-        const totalRotation = (360 * 5) + targetAngle + randomOffset;
-        
-        wheel.style.transform = `rotate(${totalRotation}deg)`;
-        
-        setTimeout(() => {
-            alert(`¡Felicidades! ¡Has ganado ${winningPrize.value} monedas!`);
-            const userIndex = users.findIndex(user => user.username === loggedInUser);
-            if (userIndex !== -1) {
-                users[userIndex].coins += winningPrize.value;
-                localStorage.setItem('kruleUsers', JSON.stringify(users));
-            }
-            localStorage.setItem(`lastSpin_${loggedInUser}`, new Date().getTime());
-            checkCooldown(); 
-        }, 6500);
     }
 
+    settingsIcon.addEventListener('click', () => {
+        const isPanelVisible = profilePanel.style.display === 'block';
+        profilePanel.style.display = isPanelVisible ? 'none' : 'block';
+        if (isPanelVisible) {
+            hideEditForm();
+        }
+    });
     
-    spinButton.addEventListener('click', spinWheel);
-    initialize();
+    profilePicContainer.addEventListener('click', () => profilePicInput.click());
+    profilePicInput.addEventListener('change', handleProfilePicChange);
+    logoutButton.addEventListener('click', logout);
+    
+    editUsernameIcon.addEventListener('click', showEditForm);
+    cancelEditButton.addEventListener('click', hideEditForm);
+    saveUsernameButton.addEventListener('click', saveNewUsername);
+    newUsernameInput.addEventListener('keydown', (event) => { if (event.key === 'Enter') saveNewUsername(); });
+
+    initializeLobby();
 });
