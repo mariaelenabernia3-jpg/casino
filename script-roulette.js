@@ -102,11 +102,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 break;
             }
         }
-        const randomOffset = (Math.random() - 0.5) * (segmentAngle * 0.8);
-    
-        const targetAngle = 270 - (segmentAngle * winningIndex) - (segmentAngle / 2); 
+
+        // --- CORRECCIÓN REALIZADA AQUÍ ---
+        // La fórmula original no apuntaba al centro de la etiqueta del premio, causando el desfase.
+        // Esta nueva fórmula calcula el ángulo necesario para alinear el centro exacto del sector con el puntero.
+        const targetAngle = (360 - (segmentAngle * winningIndex)) - (segmentAngle / 2);
         
-        const totalRotation = (360 * 5) + targetAngle + randomOffset; 
+        // Se mantiene un pequeño desfase aleatorio para que no caiga siempre en el mismo punto exacto.
+        const randomOffset = (Math.random() - 0.5) * (segmentAngle * 0.8);
+        const totalRotation = (360 * 5) + targetAngle + randomOffset;
         
         wheel.style.transform = `rotate(${totalRotation}deg)`;
         
@@ -114,15 +118,12 @@ document.addEventListener('DOMContentLoaded', () => {
             alert(`¡Felicidades! ¡Has ganado ${winningPrize.value} monedas!`);
             const userIndex = users.findIndex(user => user.username === loggedInUser);
             if (userIndex !== -1) {
-                if (typeof users[userIndex].coins !== 'number') {
-                    users[userIndex].coins = 0;
-                }
                 users[userIndex].coins += winningPrize.value;
                 localStorage.setItem('kruleUsers', JSON.stringify(users));
             }
             localStorage.setItem(`lastSpin_${loggedInUser}`, new Date().getTime());
             checkCooldown(); 
-        }, 6500); 
+        }, 6500);
     }
 
     
