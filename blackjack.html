@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blackjack - KRULE</title>
+    <link rel="stylesheet" href="style-blackjack.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@700&family=Cinzel:wght@700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <a href="lobby.html" class="back-to-lobby-link" title="Volver al Lobby">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+    </a>
+
+    <div class="blackjack-table">
+        <div id="game-status" class="game-status">Coloca tu apuesta</div>
+
+        <div class="hand-area">
+            <h2>Dealer (<span id="dealer-score">0</span>)</h2>
+            <div id="dealer-cards" class="cards-container">
+            </div>
+        </div>
+
+        <div class="hand-area player-area">
+            <h2>Tú (<span id="player-score">0</span>)</h2>
+            <div id="player-cards" class="cards-container">
+            </div>
+        </div>
+
+        <div class="controls">
+            <div id="betting-controls">
+                <div class="input-box">
+                    <label for="bet-amount">Monto de Apuesta</label>
+                    <input type="number" id="bet-amount" value="10" min="1">
+                </div>
+                <button id="deal-btn" class="action-btn">REPARTIR</button>
+            </div>
+            
+            <div id="game-controls" style="display: none;">
+                <button id="hit-btn" class="action-btn">PEDIR</button>
+                <button id="stand-btn" class="action-btn">PLANTARSE</button>
+            </div>
+        </div>
+        
+        <p class="balance">Tu Saldo: <span id="player-balance">0</span></p>
+    </div>
+
+    <script src="script-blackjack.js"></script>
+</body>
+</html>
