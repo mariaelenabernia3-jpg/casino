@@ -1,124 +1,39 @@
-document.addEventListener('DOMContentLoaded', () => {
-    const wheel = document.getElementById('wheel');
-    const spinButton = document.getElementById('spin-button');
-    const timerContainer = document.getElementById('timer-container');
-    const timerDisplay = document.getElementById('timer');
+:root {
+    --primary-green: #00f9a4;
+    --dark-background: #0a0a0a;
+    --text-color: #EAEAEA;
+}
+body { margin: 0; font-family: 'Roboto', sans-serif; background-color: var(--dark-background); color: var(--text-color); display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100vh; overflow: hidden; padding: 20px; box-sizing: border-box; }
+.back-to-lobby-link { position: fixed; top: 25px; left: 25px; z-index: 100; transition: transform 0.2s ease; }
+.back-to-lobby-link:hover { transform: scale(1.15); }
+.back-to-lobby-link svg { width: 32px; height: 32px; stroke: var(--primary-green); stroke-width: 2.5; }
+.roulette-container { text-align: center; }
+.title { font-family: 'Cinzel', serif; font-size: 3em; color: var(--primary-green); text-shadow: 0 0 15px rgba(0, 249, 164, 0.5); }
+.wheel-wrapper { position: relative; width: 400px; height: 400px; margin: 30px auto; max-width: 100%; }
+.wheel-pointer { position: absolute; top: -15px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 20px solid transparent; border-right: 20px solid transparent; border-top: 30px solid #fff; z-index: 10; }
+.wheel { position: relative; width: 100%; height: 100%; border-radius: 50%; border: 8px solid #333; background: conic-gradient(#b8c, #8c8, #c88, #88c, #8c8, #c8c, #cc8, #8cc, #b8c); overflow: hidden; transition: transform 6s cubic-bezier(0.25, 1, 0.5, 1); }
+.prize { position: absolute; width: 50%; height: 50%; top: 0; left: 50%; transform-origin: 0% 100%; display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 1.2em; }
+.prize span { display: block; transform: rotate(45deg); text-shadow: 1px 1px 2px #000; }
+.spin-button { background: linear-gradient(145deg, var(--primary-green), #00c783); color: #05140d; border: none; padding: 15px 50px; font-size: 1.5em; font-weight: bold; border-radius: 8px; cursor: pointer; transition: all 0.3s ease;}
+.spin-button:hover:not(:disabled) { transform: scale(1.05); box-shadow: 0 5px 20px rgba(0, 249, 164, 0.3); }
+.spin-button:disabled { background: #555; color: #999; cursor: not-allowed; }
+.timer-container { font-size: 1.2em; }
+.timer { font-size: 2em; font-weight: bold; color: var(--primary-green); letter-spacing: 2px; }
+.action-area { margin-top: 20px; min-height: 100px; display: flex; justify-content: center; align-items: center; }
 
-    
-    const prizes = [
-        { value: 10,   label: '10',  weight: 40 }, { value: 25,   label: '25',  weight: 25 },
-        { value: 50,   label: '50',  weight: 15 }, { value: 100,  label: '100', weight: 8 },
-        { value: 250,  label: '250', weight: 5 }, { value: 500,  label: '500', weight: 4 },
-        { value: 1000, label: '1k',  weight: 2 }, { value: 5000, label: '5k',  weight: 1 }
-    ];
-    const totalWeight = prizes.reduce((acc, prize) => acc + prize.weight, 0);
-    const segmentAngle = 360 / prizes.length;
-    let loggedInUser = null;
-    let users = [];
-
-    function initialize() { 
-        loggedInUser = localStorage.getItem('loggedInUser');
-        if (!loggedInUser) {
-            alert('Debes iniciar sesión para jugar.');
-            window.location.href = 'login.html';
-            return;
-        }
-        users = JSON.parse(localStorage.getItem('kruleUsers')) || [];
-        drawWheel();
-        checkCooldown();
+@media (max-width: 768px) {
+    .title { font-size: 2em; }
+    .wheel-wrapper {
+        width: 300px;
+        height: 300px;
+        margin: 15px auto;
     }
-
-    
-    function drawWheel() { 
-        prizes.forEach((prize, i) => {
-            const segment = document.createElement('div');
-            segment.className = 'prize';
-            segment.style.transform = `rotate(${segmentAngle * i}deg)`;
-            const prizeLabel = document.createElement('span');
-            prizeLabel.textContent = prize.label;
-            segment.appendChild(prizeLabel);
-            wheel.appendChild(segment);
-        });
+    .wheel-pointer {
+        border-left-width: 15px;
+        border-right-width: 15px;
+        border-top-width: 22px;
+        top: -12px;
     }
-
-    
-    function checkCooldown() {
-        const lastSpin = localStorage.getItem(`lastSpin_${loggedInUser}`);
-        if (!lastSpin) {
-            
-            spinButton.style.display = 'block';
-            spinButton.disabled = false;
-            timerContainer.style.display = 'none';
-            return;
-        }
-
-        const cooldownEnd = parseInt(lastSpin) + (24 * 60 * 60 * 1000);
-        const now = new Date().getTime();
-
-        if (now < cooldownEnd) {
-           
-            spinButton.style.display = 'none'; 
-            timerContainer.style.display = 'block'; 
-            startCountdown(cooldownEnd);
-        } else {
-            
-            spinButton.style.display = 'block';
-            spinButton.disabled = false;
-            timerContainer.style.display = 'none';
-            localStorage.removeItem(`lastSpin_${loggedInUser}`);
-        }
-    }
-    
-    let countdownInterval;
-    function startCountdown(endTime) { 
-        clearInterval(countdownInterval);
-        countdownInterval = setInterval(() => {
-            const now = new Date().getTime();
-            const distance = endTime - now;
-            if (distance < 0) {
-                clearInterval(countdownInterval);
-                checkCooldown(); 
-                return;
-            }
-            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-            timerDisplay.textContent = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-        }, 1000);
-    }
-
-   
-    function spinWheel() { 
-        spinButton.disabled = true;
-        const random = Math.random() * totalWeight;
-        let cumulativeWeight = 0;
-        let winningPrize = prizes[0];
-        let winningIndex = 0;
-        for (let i = 0; i < prizes.length; i++) {
-            cumulativeWeight += prizes[i].weight;
-            if (random < cumulativeWeight) {
-                winningPrize = prizes[i];
-                winningIndex = i;
-                break;
-            }
-        }
-        const randomOffset = (Math.random() - 0.5) * (segmentAngle * 0.8);
-        const targetAngle = (360 - (segmentAngle * winningIndex)) - (segmentAngle / 2) + randomOffset;
-        const totalRotation = 360 * 5 + targetAngle;
-        wheel.style.transform = `rotate(${totalRotation}deg)`;
-        setTimeout(() => {
-            alert(`¡Felicidades! ¡Has ganado ${winningPrize.value} monedas!`);
-            const userIndex = users.findIndex(user => user.username === loggedInUser);
-            if (userIndex !== -1) {
-                users[userIndex].coins += winningPrize.value;
-                localStorage.setItem('kruleUsers', JSON.stringify(users));
-            }
-            localStorage.setItem(`lastSpin_${loggedInUser}`, new Date().getTime());
-            checkCooldown(); 
-        }, 6500);
-    }
-
-    
-    spinButton.addEventListener('click', spinWheel);
-    initialize();
-});
+    .spin-button { font-size: 1.2em; padding: 12px 30px; }
+    .timer { font-size: 1.5em; }
+}
