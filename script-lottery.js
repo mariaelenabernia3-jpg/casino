@@ -1,196 +1,69 @@
-document.addEventListener('DOMContentLoaded', () => {
-   
-    const TICKET_PRICE = 100;
-    const PRIZE_AMOUNT = 5000;
-    const MAX_NUMBER = 99;
+:root {
+    --primary-green: #00f9a4;
+    --dark-background: #0a0a0a;
+    --card-background: #1a1a1a;
+    --text-color: #EAEAEA;
+    --error-color: #ff4d4d;
+}
 
+body { margin: 0; font-family: 'Roboto', sans-serif; background-color: var(--dark-background); color: var(--text-color); display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; box-sizing: border-box; }
+.back-to-lobby-link { position: fixed; top: 25px; left: 25px; z-index: 100; transition: transform 0.2s ease; }
+.back-to-lobby-link:hover { transform: scale(1.15); }
+.back-to-lobby-link svg { width: 32px; height: 32px; stroke: var(--primary-green); stroke-width: 2.5; }
 
-    const previousWinningNumbersDiv = document.getElementById('previous-winning-numbers');
-    const resultMessageP = document.getElementById('result-message');
-    const buyTicketSection = document.getElementById('buy-ticket-section');
-    const numberInputs = document.querySelectorAll('.number-input');
-    const buyButton = document.getElementById('buy-button');
-    const buyErrorMessage = document.getElementById('buy-error-message');
-    const awaitingDrawSection = document.getElementById('awaiting-draw-section');
-    const yourNumbersDiv = document.getElementById('your-numbers');
-    const timerDisplay = document.getElementById('timer');
+.lottery-container { width: 100%; max-width: 500px; text-align: center; }
+.title { font-family: 'Cinzel', serif; font-size: 3em; color: var(--primary-green); text-shadow: 0 0 15px rgba(0, 249, 164, 0.5); margin-bottom: 30px; }
+.card { background-color: var(--card-background); border-radius: 10px; padding: 25px; margin-bottom: 20px; box-shadow: 0 5px 25px rgba(0,0,0,0.5); }
+.card h2 { margin-top: 0; }
 
-    
-    let loggedInUser = null;
-    let users = [];
-    let currentUser = null;
-    let countdownInterval;
+.winning-numbers, .your-numbers { display: flex; justify-content: center; gap: 15px; margin: 20px 0; }
+.number-ball { width: 50px; height: 50px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 1.5em; font-weight: bold; }
+.previous-draw .number-ball { background: linear-gradient(145deg, var(--primary-green), #00c783); color: #05140d; }
+.current-draw .number-ball { background-color: #333; border: 2px solid var(--primary-green); color: var(--primary-green); }
 
-    
-    function initialize() {
-        loggedInUser = localStorage.getItem('loggedInUser');
-        if (!loggedInUser) {
-            alert('Debes iniciar sesión para jugar.');
-            window.location.href = 'login.html';
-            return;
-        }
-        users = JSON.parse(localStorage.getItem('kruleUsers')) || [];
-        currentUser = users.find(user => user.username === loggedInUser);
+.result-message { font-weight: bold; min-height: 1.2em; }
+.result-message.win { color: var(--primary-green); }
+.result-message.loss { color: #aaa; }
 
-        if (!currentUser) {
-            alert('Error al cargar datos. Inicia sesión de nuevo.');
-            window.location.href = 'login.html';
-            return;
-        }
+.ticket-inputs { display: flex; justify-content: center; gap: 10px; margin-bottom: 15px; }
+.number-input { width: 60px; height: 50px; text-align: center; font-size: 1.5em; background-color: #333; border: 1px solid #555; color: var(--text-color); border-radius: 5px; -moz-appearance: textfield; }
+.number-input::-webkit-outer-spin-button, .number-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.number-input:focus { border-color: var(--primary-green); outline: none; }
 
-        buyButton.textContent = `Comprar Boleto (Precio: ${TICKET_PRICE})`;
-        
-        const today = getUTCDateString(new Date());
-        const yesterday = getUTCDateString(new Date(Date.now() - 86400000));
-        
-        checkPreviousDraw(yesterday);
-        updateCurrentDrawUI(today);
-        startCountdown();
-        setupEventListeners();
+.buy-button { background: linear-gradient(145deg, var(--primary-green), #00c783); color: #05140d; border: none; padding: 12px 30px; font-size: 1.1em; font-weight: bold; border-radius: 5px; cursor: pointer; transition: all 0.3s ease; }
+.buy-button:hover { transform: scale(1.05); }
+
+.timer-container { font-size: 1.1em; }
+.timer { font-size: 1.8em; font-weight: bold; color: var(--primary-green); letter-spacing: 2px; }
+
+.error-message { color: var(--error-color); min-height: 1.2em; font-weight: bold; display: none; }
+
+@media (max-width: 768px) {
+    .title {
+        font-size: 2.2em;
+        margin-bottom: 20px;
     }
-
-    function generateWinningNumbers(dateString) {
-        let seed = 0;
-        for (let i = 0; i < dateString.length; i++) {
-            seed += dateString.charCodeAt(i);
-        }
-
-        const random = () => {
-            const x = Math.sin(seed++) * 10000;
-            return x - Math.floor(x);
-        };
-
-        const numbers = new Set();
-        while (numbers.size < 3) {
-            numbers.add(Math.floor(random() * MAX_NUMBER) + 1);
-        }
-        return Array.from(numbers).sort((a, b) => a - b);
+    .card {
+        padding: 20px;
     }
-
-    function checkPreviousDraw(yesterday) {
-        const winningNumbers = generateWinningNumbers(yesterday);
-        displayNumbers(previousWinningNumbersDiv, winningNumbers);
-
-        const ticket = JSON.parse(localStorage.getItem(`lotteryTicket_${loggedInUser}`));
-        if (ticket && ticket.forDate === yesterday) {
-            const userNumbers = ticket.numbers.sort((a, b) => a - b);
-            
-            const isWinner = JSON.stringify(userNumbers) === JSON.stringify(winningNumbers);
-
-            if (isWinner) {
-                resultMessageP.textContent = `¡Felicidades! Acertaste los números y ganaste ${PRIZE_AMOUNT} monedas.`;
-                resultMessageP.className = 'result-message win';
-                currentUser.coins += PRIZE_AMOUNT;
-                updateUserData();
-            } else {
-                resultMessageP.textContent = 'No hubo suerte esta vez. ¡Inténtalo de nuevo hoy!';
-                resultMessageP.className = 'result-message loss';
-            }
-            localStorage.removeItem(`lotteryTicket_${loggedInUser}`);
-        } else {
-             resultMessageP.textContent = 'Aún no has participado. ¡Compra tu primer boleto!';
-             resultMessageP.className = 'result-message';
-        }
+    .number-ball {
+        width: 40px;
+        height: 40px;
+        font-size: 1.2em;
     }
-
-    function updateCurrentDrawUI(today) {
-        const ticket = JSON.parse(localStorage.getItem(`lotteryTicket_${loggedInUser}`));
-        if (ticket && ticket.forDate === today) {
-           
-            buyTicketSection.style.display = 'none';
-            awaitingDrawSection.style.display = 'block';
-            displayNumbers(yourNumbersDiv, ticket.numbers);
-        } else {
-            
-            buyTicketSection.style.display = 'block';
-            awaitingDrawSection.style.display = 'none';
-        }
+    .ticket-inputs {
+        gap: 8px;
     }
-
-    function buyTicket() {
-        const numbers = [];
-        let isValid = true;
-        const seenNumbers = new Set();
-
-        numberInputs.forEach(input => {
-            const num = parseInt(input.value, 10);
-            if (isNaN(num) || num < 1 || num > MAX_NUMBER) {
-                isValid = false;
-            }
-            if (seenNumbers.has(num)) { 
-                isValid = false;
-            }
-            numbers.push(num);
-            seenNumbers.add(num);
-        });
-
-        if (!isValid) {
-            showError('Por favor, introduce 3 números únicos entre 1 y 99.');
-            return;
-        }
-
-        if (currentUser.coins < TICKET_PRICE) {
-            showError('No tienes suficientes monedas para comprar un boleto.');
-            return;
-        }
-
-        currentUser.coins -= TICKET_PRICE;
-        updateUserData();
-
-        const today = getUTCDateString(new Date());
-        const newTicket = { numbers, forDate: today };
-        localStorage.setItem(`lotteryTicket_${loggedInUser}`, JSON.stringify(newTicket));
-
-        alert('¡Boleto comprado con éxito! Vuelve mañana para ver los resultados.');
-        updateCurrentDrawUI(today);
+    .number-input {
+        width: 50px;
+        height: 45px;
+        font-size: 1.2em;
     }
-
-    function setupEventListeners() {
-        buyButton.addEventListener('click', buyTicket);
+    .buy-button {
+        font-size: 1em;
+        padding: 12px 20px;
     }
-    
-    function startCountdown() {
-        clearInterval(countdownInterval);
-        countdownInterval = setInterval(() => {
-            const now = new Date();
-            const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 0, 0);
-            const distance = endOfDay.getTime() - now.getTime();
-            
-            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-            
-            timerDisplay.textContent = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-        }, 1000);
+    .timer {
+        font-size: 1.5em;
     }
-    
-    function displayNumbers(container, numbers) {
-        container.innerHTML = '';
-        numbers.forEach(num => {
-            const ball = document.createElement('span');
-            ball.className = 'number-ball';
-            ball.textContent = num;
-            container.appendChild(ball);
-        });
-    }
-
-    function getUTCDateString(date) {
-        return date.toISOString().split('T')[0];
-    }
-    
-    function showError(message) {
-        buyErrorMessage.textContent = message;
-        buyErrorMessage.style.display = 'block';
-        setTimeout(() => { buyErrorMessage.style.display = 'none'; }, 3000);
-    }
-    
-    function updateUserData() {
-        const userIndex = users.findIndex(u => u.username === loggedInUser);
-        if (userIndex !== -1) {
-            users[userIndex] = currentUser;
-            localStorage.setItem('kruleUsers', JSON.stringify(users));
-        }
-    }
-
-    initialize();
-});
+}
