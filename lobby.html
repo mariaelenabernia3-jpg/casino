@@ -10,47 +10,37 @@
     <link rel="stylesheet" href="style-lobby.css">
 </head>
 <body>
-    <audio src="https://cdn.pixabay.com/download/audio/2022/04/19/audio_17156a1652.mp3" autoplay loop></audio>
+    <audio id="lobby-music" src="https://cdn.pixabay.com/download/audio/2022/04/19/audio_17156a1652.mp3" loop></audio>
 
     <header class="main-header">
         <div class="logo">KRULE</div>
         <nav class="header-nav">
-    <a href="lottery.html" class="nav-link">Lotería</a>
-</nav>
+            <a href="lottery.html" class="nav-link">Lotería</a>
+        </nav>
         <div class="header-actions">
             <a href="register.html" class="register-button" id="register-link">Regístrate</a>
-
             <div class="profile-container" id="profile-section" style="display: none;">
-    
                 <div class="header-visible-info">
                     <div class="profile-pic-container" id="profile-pic-container" title="Cambiar foto de perfil">
                         <img id="profile-pic-img" 
                              src='data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="%2300f9a4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>' 
                              alt="Foto de Perfil">
                     </div>
-                    
                     <div class="coin-balance-display" id="coin-balance">
                         <img src='data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="%23FFD700" stroke="%23B8860B" stroke-width="5"/><text x="50" y="68" font-size="50" text-anchor="middle" fill="%23B8860B">K</text></svg>' class="coin-icon" alt="Moneda">
                         <span id="balance-amount">0</span>
                     </div>
-            
                     <p class="header-username" id="header-username"></p>
                 </div>
-            
-                
                 <div class="settings-icon" id="settings-icon">
                     ⚙️
                 </div>
-            
-                
                 <div class="profile-panel" id="profile-panel">
                     <h3>Ajustes de Perfil</h3>
                     <p class="panel-username-label">Nombre de Usuario:</p>
-                    
                     <div class="username-container">
                         <p id="panel-username-display" class="username-display"></p>
                         <div class="edit-icon" id="edit-username-icon" title="Editar nombre">✎</div>
-                        
                         <div class="edit-form" id="edit-username-form" style="display: none;">
                             <input type="text" id="new-username-input" class="username-input">
                             <button id="save-username-button" class="save-button">✔</button>
@@ -58,12 +48,9 @@
                         </div>
                     </div>
                     <p id="edit-error-message" class="edit-error"></p>
-                    
                     <hr>
                     <button id="logout-button" class="logout-button">Cerrar Sesión</button>
                 </div>
-            
-               
                 <input type="file" id="profile-pic-input" accept="image/png, image/jpeg" style="display: none;">
             </div>
         </div>
