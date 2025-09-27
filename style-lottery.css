@@ -1,0 +1,38 @@
+:root {
+    --primary-green: #00f9a4;
+    --dark-background: #0a0a0a;
+    --card-background: #1a1a1a;
+    --text-color: #EAEAEA;
+    --error-color: #ff4d4d;
+}
+
+body { margin: 0; font-family: 'Roboto', sans-serif; background-color: var(--dark-background); color: var(--text-color); display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; box-sizing: border-box; }
+.back-to-lobby-link { position: fixed; top: 25px; left: 25px; z-index: 100; transition: transform 0.2s ease; }
+.back-to-lobby-link:hover { transform: scale(1.15); }
+.back-to-lobby-link svg { width: 32px; height: 32px; stroke: var(--primary-green); stroke-width: 2.5; }
+
+.lottery-container { width: 100%; max-width: 500px; text-align: center; }
+.title { font-family: 'Cinzel', serif; font-size: 3em; color: var(--primary-green); text-shadow: 0 0 15px rgba(0, 249, 164, 0.5); margin-bottom: 30px; }
+.card { background-color: var(--card-background); border-radius: 10px; padding: 25px; margin-bottom: 20px; box-shadow: 0 5px 25px rgba(0,0,0,0.5); }
+.card h2 { margin-top: 0; }
+
+.winning-numbers, .your-numbers { display: flex; justify-content: center; gap: 15px; margin: 20px 0; }
+.number-ball { width: 50px; height: 50px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 1.5em; font-weight: bold; }
+.previous-draw .number-ball { background: linear-gradient(145deg, var(--primary-green), #00c783); color: #05140d; }
+.current-draw .number-ball { background-color: #333; border: 2px solid var(--primary-green); color: var(--primary-green); }
+
+.result-message { font-weight: bold; min-height: 1.2em; }
+.result-message.win { color: var(--primary-green); }
+.result-message.loss { color: #aaa; }
+
+.ticket-inputs { display: flex; justify-content: center; gap: 10px; margin-bottom: 15px; }
+.number-input { width: 60px; height: 50px; text-align: center; font-size: 1.5em; background-color: #333; border: 1px solid #555; color: var(--text-color); border-radius: 5px; }
+.number-input:focus { border-color: var(--primary-green); outline: none; }
+
+.buy-button { background: linear-gradient(145deg, var(--primary-green), #00c783); color: #05140d; border: none; padding: 12px 30px; font-size: 1.1em; font-weight: bold; border-radius: 5px; cursor: pointer; transition: all 0.3s ease; }
+.buy-button:hover { transform: scale(1.05); }
+
+.timer-container { font-size: 1.1em; }
+.timer { font-size: 1.8em; font-weight: bold; color: var(--primary-green); letter-spacing: 2px; }
+
+.error-message { color: var(--error-color); min-height: 1.2em; font-weight: bold; display: none; }

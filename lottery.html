@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lotería Diaria - KRULE</title>
+    <link rel="stylesheet" href="style-lottery.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@700&family=Cinzel:wght@700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <a href="lobby.html" class="back-to-lobby-link" title="Volver al Lobby">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+    </a>
+
+    <div class="lottery-container">
+        <h1 class="title">Lotería Diaria</h1>
+
+        <div class="card previous-draw">
+            <h2>Sorteo de Ayer</h2>
+            <div class="winning-numbers" id="previous-winning-numbers">
+                <span class="number-ball">?</span>
+                <span class="number-ball">?</span>
+                <span class="number-ball">?</span>
+            </div>
+            <p id="result-message" class="result-message"></p>
+        </div>
+
+        <div class="card current-draw">
+            <h2>Sorteo de Hoy</h2>
+            
+            <div id="buy-ticket-section">
+                <p>Elige 3 números del 1 al 99. ¡Mucha suerte!</p>
+                <div class="ticket-inputs" id="ticket-inputs">
+                    <input type="number" class="number-input" min="1" max="99">
+                    <input type="number" class="number-input" min="1" max="99">
+                    <input type="number" class="number-input" min="1" max="99">
+                </div>
+                <p id="buy-error-message" class="error-message"></p>
+                <button class="buy-button" id="buy-button">Comprar Boleto (Precio: 100)</button>
+            </div>
+
+            <div id="awaiting-draw-section" style="display: none;">
+                <p>¡Tu boleto está participando! Estos son tus números:</p>
+                <div class="your-numbers" id="your-numbers">
+                </div>
+                <div class="timer-container">
+                    <p>El sorteo se realizará en:</p>
+                    <div class="timer" id="timer">00:00:00</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script-lottery.js"></script>
+</body>
+</html>
