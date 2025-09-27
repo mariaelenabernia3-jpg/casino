@@ -1,4 +1,27 @@
 document.addEventListener('DOMContentLoaded', () => {
+    
+    const blackjackMusic = document.getElementById('blackjack-music');
+
+    if (localStorage.getItem('kruleAudioPermission') === 'true') {
+        if (blackjackMusic) {
+            blackjackMusic.play().catch(e => {
+                console.warn("Autoplay bloqueado, se activará con el primer clic.", e);
+                addFallbackClickListener();
+            });
+        }
+        localStorage.removeItem('kruleAudioPermission');
+    } else {
+        addFallbackClickListener();
+    }
+
+    function addFallbackClickListener() {
+        function playMusicOnFirstInteraction() {
+            if (blackjackMusic && blackjackMusic.paused) {
+                blackjackMusic.play().catch(e => console.error("Error al intentar reproducir música con clic.", e));
+            }
+        }
+        document.addEventListener('click', playMusicOnFirstInteraction, { once: true });
+    }
 
     let deck = [];
     let dealerHand = [];
@@ -22,8 +45,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const dealBtn = document.getElementById('deal-btn');
     const hitBtn = document.getElementById('hit-btn');
     const standBtn = document.getElementById('stand-btn');
-
-   
     
     function initialize() {
         loggedInUser = localStorage.getItem('loggedInUser');
@@ -49,8 +70,6 @@ document.addEventListener('DOMContentLoaded', () => {
         hitBtn.addEventListener('click', hit);
         standBtn.addEventListener('click', stand);
     }
-    
-   
 
     function createDeck() {
         const suits = ['♥', '♦', '♣', '♠'];
@@ -91,8 +110,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         return score;
     }
-    
-   
 
     function startNewGame() {
         const currentBet = parseInt(betAmountInput.value);
@@ -168,7 +185,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 1000);
     }
 
-
     function endGame(bet, playerHasBlackjack = false) {
         renderGame(true); 
 
@@ -178,7 +194,6 @@ document.addEventListener('DOMContentLoaded', () => {
         let message = "";
         let payout = 0;
 
-        
         if (playerHasBlackjack && dealerScore !== 21) {
             message = "¡BLACKJACK! ¡Ganas!";
             payout = bet * 2.5; 
@@ -208,15 +223,12 @@ document.addEventListener('DOMContentLoaded', () => {
             updateUserData();
         }
         
-        
         setTimeout(() => {
             updateBalanceDisplay();
             toggleControls(true);
         }, 1500);
     }
-
     
-
     function renderGame(revealDealerCard) {
         dealerCardsEl.innerHTML = '';
         playerCardsEl.innerHTML = '';
@@ -265,7 +277,6 @@ document.addEventListener('DOMContentLoaded', () => {
     function updateBalanceDisplay() {
         playerBalanceEl.textContent = currentUser.coins;
     }
-
     
     function updateUserData() {
         const userIndex = users.findIndex(user => user.username === loggedInUser);
