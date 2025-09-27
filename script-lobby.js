@@ -1,18 +1,35 @@
 document.addEventListener('DOMContentLoaded', function() {
     
     const lobbyMusic = document.getElementById('lobby-music');
-    if (lobbyMusic) {
-        
-        const playPromise = lobbyMusic.play();
 
-        if (playPromise !== undefined) {
-            playPromise.catch(error => {
-            
-                console.error("La reproducción automática de la música fue bloqueada por el navegador:", error);
+    if (localStorage.getItem('kruleAudioPermission') === 'true') {
+        if (lobbyMusic) {
+            lobbyMusic.play().catch(e => {
+                console.warn("Autoplay bloqueado, se activará con el primer clic.", e);
+                addFallbackClickListener();
             });
         }
+        localStorage.removeItem('kruleAudioPermission');
+    } else {
+        addFallbackClickListener();
     }
 
+    function addFallbackClickListener() {
+        function playMusicOnFirstInteraction() {
+            if (lobbyMusic && lobbyMusic.paused) {
+                lobbyMusic.play().catch(e => console.error("Error al intentar reproducir música con clic.", e));
+            }
+        }
+        document.addEventListener('click', playMusicOnFirstInteraction, { once: true });
+    }
+
+    const blackjackLink = document.getElementById('blackjack-link');
+    if (blackjackLink) {
+        blackjackLink.addEventListener('click', () => {
+            localStorage.setItem('kruleAudioPermission', 'true');
+        });
+    }
+    
     const registerLink = document.getElementById('register-link');
     const profileSection = document.getElementById('profile-section');
     const balanceAmount = document.getElementById('balance-amount');
@@ -49,14 +66,11 @@ document.addEventListener('DOMContentLoaded', function() {
             let currentUser = users.find(user => user.username === loggedInUser);
             
             if (currentUser) {
-               
                 if (typeof currentUser.coins === 'undefined') { 
                     currentUser.coins = 1000;
                     updateUserData(currentUser); 
                 }
-                
                 profilePicImg.src = currentUser.profilePic || defaultProfileIconSVG;
-
                 headerUsername.textContent = currentUser.username;
                 panelUsernameDisplay.textContent = currentUser.username;
                 balanceAmount.textContent = currentUser.coins;
@@ -72,7 +86,6 @@ document.addEventListener('DOMContentLoaded', function() {
     function handleProfilePicChange(event) {
         const file = event.target.files[0];
         if (!file) return;
-
         const reader = new FileReader();
         reader.onload = function(e) {
             const users = JSON.parse(localStorage.getItem('kruleUsers')) || [];
@@ -112,13 +125,11 @@ document.addEventListener('DOMContentLoaded', function() {
             editErrorMessage.textContent = 'El nombre debe tener al menos 3 caracteres.';
             return;
         }
-
         const users = JSON.parse(localStorage.getItem('kruleUsers')) || [];
         if (users.some(user => user.username === newName)) {
             editErrorMessage.textContent = 'Ese nombre ya está en uso.';
             return;
         }
-
         let currentUser = users.find(user => user.username === loggedInUser);
         if (currentUser) {
             currentUser.username = newName;
