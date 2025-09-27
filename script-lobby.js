@@ -66,8 +66,9 @@ document.addEventListener('DOMContentLoaded', function() {
             let currentUser = users.find(user => user.username === loggedInUser);
             
             if (currentUser) {
+                
                 if (typeof currentUser.coins === 'undefined') { 
-                    currentUser.coins = 1000;
+                    currentUser.coins = 0; 
                     updateUserData(currentUser); 
                 }
                 profilePicImg.src = currentUser.profilePic || defaultProfileIconSVG;
