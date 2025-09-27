@@ -14,110 +14,49 @@
             --dark-background: #0a0a0a; 
             --text-color: #EAEAEA;
         }
-
         body {
-            margin: 0;
-            font-family: 'Roboto', sans-serif;
-            background-color: var(--dark-background);
+            margin: 0; font-family: 'Roboto', sans-serif; background-color: var(--dark-background);
             overflow: hidden;
         }
-
         #video-background {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            min-width: 100%;
-            min-height: 100%;
-            transform: translateX(-50%) translateY(-50%);
-            z-index: -2;
-            object-fit: cover;
-            opacity: 0.5; 
+            position: fixed; top: 50%; left: 50%; min-width: 100%; min-height: 100%;
+            transform: translateX(-50%) translateY(-50%); z-index: -2; object-fit: cover; opacity: 0.5; 
         }
-
         .video-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.85); 
-            z-index: -1;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.85); z-index: -1;
         }
-
         #start-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: var(--dark-background);
-            z-index: 10;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            cursor: pointer;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: var(--dark-background);
+            z-index: 10; display: flex; justify-content: center; align-items: center; cursor: pointer;
             transition: opacity 0.5s ease-out;
         }
-
         .start-text {
-            font-family: 'Cinzel', serif;
-            font-size: 2.5em;
-            color: var(--primary-green);
-            text-shadow: 0 0 15px rgba(0, 249, 164, 0.5);
-            border: 2px solid var(--primary-green);
-            padding: 20px 40px;
-            border-radius: 5px;
-            animation: pulse 2s infinite;
+            font-family: 'Cinzel', serif; font-size: 2.5em; color: var(--primary-green);
+            text-shadow: 0 0 15px rgba(0, 249, 164, 0.5); border: 2px solid var(--primary-green);
+            padding: 20px 40px; border-radius: 5px; animation: pulse 2s infinite;
         }
-
         @keyframes pulse {
             0% { box-shadow: 0 0 10px rgba(0, 249, 164, 0.3); }
             50% { box-shadow: 0 0 25px rgba(0, 249, 164, 0.7); }
             100% { box-shadow: 0 0 10px rgba(0, 249, 164, 0.3); }
         }
-        
-       
-
         #welcome-screen {
-            display: flex; 
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            text-align: center;
-            opacity: 0; 
-            transition: opacity 1s ease-in;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            height: 100vh; text-align: center; opacity: 0; transition: opacity 1s ease-in; 
         }
-
         .welcome-title {
-            font-family: 'Cinzel', serif;
-            font-size: 4.5em;
-            font-weight: 700;
-            margin-bottom: 40px;
-            letter-spacing: 3px;
-            color: var(--primary-green); 
+            font-family: 'Cinzel', serif; font-size: 4.5em; font-weight: 700; margin-bottom: 40px;
+            letter-spacing: 3px; color: var(--primary-green); 
             text-shadow: 0 0 25px rgba(0, 249, 164, 0.5), 0 0 10px rgba(0, 249, 164, 0.4);
         }
-
         .enter-button {
-            background: linear-gradient(145deg, var(--primary-green), var(--darker-green));
-            color: #05140d; 
-            border: none;
-            padding: 15px 45px;
-            font-size: 1.3em;
-            font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            cursor: pointer;
-            border-radius: 5px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.7);
+            background: linear-gradient(145deg, var(--primary-green), var(--darker-green)); color: #05140d; 
+            border: none; padding: 15px 45px; font-size: 1.3em; font-weight: bold; text-transform: uppercase;
+            letter-spacing: 1px; cursor: pointer; border-radius: 5px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.7);
             transition: all 0.3s ease;
         }
-
-        .enter-button:hover {
-            transform: scale(1.05);
-            box-shadow: 0 8px 30px rgba(0, 249, 164, 0.3);
-        }
+        .enter-button:hover { transform: scale(1.05); box-shadow: 0 8px 30px rgba(0, 249, 164, 0.3); }
     </style>
 </head>
 <body>
@@ -136,7 +75,7 @@
 
     <div id="welcome-screen">
         <h1 class="welcome-title">Casino KRULE</h1>
-        <a href="lobby.html">
+        <a href="lobby.html" id="enter-lobby-link">
             <button class="enter-button">Entrar</button>
         </a>
     </div>
@@ -145,20 +84,18 @@
         const startOverlay = document.getElementById('start-overlay');
         const welcomeScreen = document.getElementById('welcome-screen');
         const music = document.getElementById('welcome-music');
+        const enterLobbyLink = document.getElementById('enter-lobby-link');
 
         startOverlay.addEventListener('click', () => {
-            music.play().catch(error => {
-                console.error("La reproducción de música fue bloqueada:", error);
-            });
-
+            music.play().catch(error => console.error("Música bloqueada:", error));
             startOverlay.style.opacity = '0';
-            setTimeout(() => {
-                startOverlay.style.display = 'none';
-            }, 500);
-
+            setTimeout(() => startOverlay.style.display = 'none', 500);
             welcomeScreen.style.opacity = '1';
-
         }, { once: true });
+
+        enterLobbyLink.addEventListener('click', () => {
+            localStorage.setItem('kruleAudioPermission', 'true');
+        });
     </script>
 </body>
 </html>
