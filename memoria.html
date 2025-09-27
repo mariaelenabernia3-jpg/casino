@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Juego de Memoria - KRULE</title>
+    <link rel="stylesheet" href="style-memoria.css">
+</head>
+<body>
+    <a href="lobby.html" class="back-to-lobby-link" title="Volver al Lobby">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 S5 12 12 5"></polyline></svg>
+    </a>
+
+    <div class="memory-game-container">
+        <div class="memory-grid-container">
+            <div class="memory-grid">
+                <div class="memory-tile color-green" data-color="green"></div>
+                <div class="memory-tile color-red" data-color="red"></div>
+                <div class="memory-tile color-yellow" data-color="yellow"></div>
+                <div class="memory-tile color-blue" data-color="blue"></div>
+            </div>
+            <div class="status-display" id="status-display">Coloca una apuesta para empezar</div>
+            
+            <!-- NUEVO: Barra del temporizador -->
+            <div class="timer-container" id="timer-container">
+                <div class="timer-bar" id="timer-bar"></div>
+            </div>
+
+        </div>
+
+        <div class="memory-controls">
+            <div class="control-group">
+                <label for="bet-amount">Monto de Apuesta</label>
+                <input type="number" id="bet-amount" value="10" min="1">
+            </div>
+            
+            <div class="info-displays">
+                 <div class="info-box">
+                    <p class="label">Nivel Actual</p>
+                    <p class="value" id="level-display">-</p>
+                </div>
+                 <div class="info-box">
+                    <p class="label">Próximo Multiplicador</p>
+                    <p class="value" id="multiplier-display">-</p>
+                </div>
+            </div>
+
+            <button class="action-btn" id="start-game-btn">EMPEZAR</button>
+            <button class="cashout-btn" id="cashout-btn" style="display: none;">Retirar <span>0</span></button>
+        </div>
+    </div>
+    
+    <script src="script-memoria.js"></script>
+</body>
+</html>
