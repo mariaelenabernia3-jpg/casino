@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ruleta - KRULE</title>
+    <link rel="stylesheet" href="style-ruleta.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@700&family=Cinzel:wght@700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <a href="lobby.html" class="back-to-lobby-link" title="Volver al Lobby">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+    </a>
+
+    <div class="game-container">
+        <div class="result-display-container">
+            <div class="ticker-wrapper">
+                <div class="ticker-pointer"></div>
+                <div class="ticker-tape" id="ticker-tape"></div>
+            </div>
+            <div class="history-display">
+                <div class="history-numbers" id="history-numbers"></div>
+            </div>
+        </div>
+        <div class="status-display" id="status-display">Coloca tus apuestas</div>
+        
+        <div class="betting-table-wrapper">
+            <div class="betting-table" id="betting-table">
+            </div>
+        </div>
+
+        <div class="controls-bar">
+            <div class="balance-info">
+                <p>SALDO: <span id="player-balance">0</span></p>
+                <p>APUESTA: <span id="total-bet">0</span></p>
+            </div>
+            <div class="chip-controls">
+                <button id="chip-decrease">-</button>
+                <div class="chip-display" id="chip-display"><span id="chip-value">50</span></div>
+                <button id="chip-increase">+</button>
+            </div>
+            <div class="action-controls">
+                <button id="clear-btn" title="Limpiar Apuestas">⟲</button>
+                <button id="spin-btn">GIRAR</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script-ruleta.js"></script>
+</body>
+</html>
