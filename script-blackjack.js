@@ -159,6 +159,10 @@ document.addEventListener('DOMContentLoaded', () => {
         renderGame(false);
 
         if (calculateScore(playerHand) > 21) {
+           
+            hitBtn.disabled = true;
+            standBtn.disabled = true;
+            // ---------------------------
             const currentBet = parseInt(betAmountInput.value);
             endGame(currentBet);
         }
