@@ -103,12 +103,8 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        // --- CORRECCIÓN REALIZADA AQUÍ ---
-        // La fórmula original no apuntaba al centro de la etiqueta del premio, causando el desfase.
-        // Esta nueva fórmula calcula el ángulo necesario para alinear el centro exacto del sector con el puntero.
         const targetAngle = (360 - (segmentAngle * winningIndex)) - (segmentAngle / 2);
         
-        // Se mantiene un pequeño desfase aleatorio para que no caiga siempre en el mismo punto exacto.
         const randomOffset = (Math.random() - 0.5) * (segmentAngle * 0.8);
         const totalRotation = (360 * 5) + targetAngle + randomOffset;
         
@@ -130,3 +126,4 @@ document.addEventListener('DOMContentLoaded', () => {
     spinButton.addEventListener('click', spinWheel);
     initialize();
 });
+
