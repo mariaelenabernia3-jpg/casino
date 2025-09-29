@@ -1,31 +1,25 @@
 document.addEventListener('DOMContentLoaded', function() {
-    
-    const lobbyMusic = document.getElementById('lobby-music');
+    const lobbyLoadingScreen = document.getElementById('lobby-loading-screen');
+    const mainLobbyHeader = document.getElementById('main-lobby-header');
+    const mainLobbyContent = document.getElementById('main-lobby-content');
 
-    if (localStorage.getItem('kruleAudioPermission') === 'true') {
-        if (lobbyMusic) {
-            lobbyMusic.play().catch(e => {
-                console.warn("Autoplay bloqueado, se activará con el primer clic.", e);
-                addFallbackClickListener();
-            });
-        }
-        localStorage.removeItem('kruleAudioPermission');
-    } else {
-        addFallbackClickListener();
-    }
+ 
+    if (mainLobbyHeader) mainLobbyHeader.style.display = 'none';
+    if (mainLobbyContent) mainLobbyContent.style.display = 'none';
+   
+    if (lobbyLoadingScreen) lobbyLoadingScreen.style.display = 'flex'; 
 
-    function addFallbackClickListener() {
-        function playMusicOnFirstInteraction() {
-            if (lobbyMusic && lobbyMusic.paused) {
-                lobbyMusic.play().catch(e => console.error("Error al intentar reproducir música con clic.", e));
-            }
-        }
-        document.addEventListener('click', playMusicOnFirstInteraction, { once: true });
-    }
-
+  
+    setTimeout(() => {
+        if (lobbyLoadingScreen) lobbyLoadingScreen.style.display = 'none';
+        if (mainLobbyHeader) mainLobbyHeader.style.display = 'flex';
+        if (mainLobbyContent) mainLobbyContent.style.display = 'block'; 
+        initializeLobby(); 
+    }, 2000); 
     const blackjackLink = document.getElementById('blackjack-link');
     if (blackjackLink) {
         blackjackLink.addEventListener('click', () => {
+           
             localStorage.setItem('kruleAudioPermission', 'true');
         });
     }
@@ -174,5 +168,4 @@ document.addEventListener('DOMContentLoaded', function() {
     saveUsernameButton.addEventListener('click', saveNewUsername);
     newUsernameInput.addEventListener('keydown', (event) => { if (event.key === 'Enter') saveNewUsername(); });
 
-    initializeLobby();
 });
