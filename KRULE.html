@@ -3,126 +3,95 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KRULE - Salón de Juegos</title>
+    <title>Bienvenido a KRULE</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;700&family=Cinzel:wght@700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style-lobby.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Roboto:wght@300&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-green: #00f9a4; 
+            --darker-green: #00c783;  
+            --dark-background: #0a0a0a; 
+            --text-color: #EAEAEA;
+        }
+        body {
+            margin: 0; font-family: 'Roboto', sans-serif; background-color: var(--dark-background);
+            overflow: hidden;
+        }
+        #video-background {
+            position: fixed; top: 50%; left: 50%; min-width: 100%; min-height: 100%;
+            transform: translateX(-50%) translateY(-50%); z-index: -2; object-fit: cover; opacity: 0.5; 
+        }
+        .video-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.85); z-index: -1;
+        }
+        #start-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: var(--dark-background);
+            z-index: 10; display: flex; justify-content: center; align-items: center; cursor: pointer;
+            transition: opacity 0.5s ease-out;
+        }
+        .start-text {
+            font-family: 'Cinzel', serif; font-size: 2.5em; color: var(--primary-green);
+            text-shadow: 0 0 15px rgba(0, 249, 164, 0.5); border: 2px solid var(--primary-green);
+            padding: 20px 40px; border-radius: 5px; animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 10px rgba(0, 249, 164, 0.3); }
+            50% { box-shadow: 0 0 25px rgba(0, 249, 164, 0.7); }
+            100% { box-shadow: 0 0 10px rgba(0, 249, 164, 0.3); }
+        }
+        #welcome-screen {
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            height: 100vh; text-align: center; opacity: 0; transition: opacity 1s ease-in; 
+        }
+        .welcome-title {
+            font-family: 'Cinzel', serif; font-size: 4.5em; font-weight: 700; margin-bottom: 40px;
+            letter-spacing: 3px; color: var(--primary-green); 
+            text-shadow: 0 0 25px rgba(0, 249, 164, 0.5), 0 0 10px rgba(0, 249, 164, 0.4);
+        }
+        .enter-button {
+            background: linear-gradient(145deg, var(--primary-green), var(--darker-green)); color: #05140d; 
+            border: none; padding: 15px 45px; font-size: 1.3em; font-weight: bold; text-transform: uppercase;
+            letter-spacing: 1px; cursor: pointer; border-radius: 5px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.7);
+            transition: all 0.3s ease;
+        }
+        .enter-button:hover { transform: scale(1.05); box-shadow: 0 8px 30px rgba(0, 249, 164, 0.3); }
+    </style>
 </head>
 <body>
-    <div id="lobby-loading-screen">
-        <img id="lobby-loading-coin" src='data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="%23FFD700" stroke="%23B8860B" stroke-width="5"/><text x="50" y="68" font-size="50" text-anchor="middle" fill="%23B8860B">K</text></svg>' alt="Moneda KRULE">
-        <p class="loading-text">Cargando Lobby...</p>
+  
+    
+    <div id="start-overlay">
+        <div class="start-text">Haz Clic para Entrar</div>
     </div>
 
-    <header class="main-header" id="main-lobby-header">
-        <div class="logo">KRULE</div>
-        <nav class="header-nav">
-            <a href="lottery.html" class="nav-link">Lotería</a>
-        </nav>
-        <div class="header-actions">
-            <a href="register.html" class="register-button" id="register-link">Regístrate</a>
-            <div class="profile-container" id="profile-section" style="display: none;">
-                <div class="header-visible-info">
-                    <div class="profile-pic-container" id="profile-pic-container" title="Cambiar foto de perfil">
-                        <img id="profile-pic-img" 
-                             src='data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="%2300f9a4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>' 
-                             alt="Foto de Perfil">
-                    </div>
-                    <div class="coin-balance-display" id="coin-balance">
-                        <img src='data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="%23FFD700" stroke="%23B8860B" stroke-width="5"/><text x="50" y="68" font-size="50" text-anchor="middle" fill="%23B8860B">K</text></svg>' class="coin-icon" alt="Moneda">
-                        <span id="balance-amount">0</span>
-                    </div>
-                    <p class="header-username" id="header-username"></p>
-                </div>
-                <div class="settings-icon" id="settings-icon">
-                    ⚙️
-                </div>
-                <div class="profile-panel" id="profile-panel">
-                    <h3>Ajustes de Perfil</h3>
-                    <p class="panel-username-label">Nombre de Usuario:</p>
-                    <div class="username-container">
-                        <p id="panel-username-display" class="username-display"></p>
-                        <div class="edit-icon" id="edit-username-icon" title="Editar nombre">✎</div>
-                        <div class="edit-form" id="edit-username-form" style="display: none;">
-                            <input type="text" id="new-username-input" class="username-input">
-                            <button id="save-username-button" class="save-button">✔</button>
-                            <button id="cancel-edit-button" class="cancel-button">✖</button>
-                        </div>
-                    </div>
-                    <p id="edit-error-message" class="edit-error"></p>
-                    <hr>
-                    <button id="logout-button" class="logout-button">Cerrar Sesión</button>
-                </div>
-                <input type="file" id="profile-pic-input" accept="image/png, image/jpeg" style="display: none;">
-            </div>
-        </div>
-    </header>
-
-    <main class="lobby-container" id="main-lobby-content">
-        <h1 class="lobby-title">Nuestros Juegos</h1>
-        <div class="game-grid">
-           <a href="blackjack.html" class="game-card-link" id="blackjack-link">
-                <div class="game-card">
-                    <div class="game-card-image">
-                        <img src="https://i.pinimg.com/originals/95/8e/d4/958ed4f0f5e2e72557bac2b2fce82d4d.png" alt="Juego de Blackjack">
-                    </div> 
-                    <div class="game-card-content">
-                        <h2 class="game-card-title">Blackjack</h2>
-                        <p class="game-card-description">¿Podrás ganar y llegar a 21 sin pasarte?</p>
-                    </div>
-                </div>
-            </a>
-            <a href="memoria.html" class="game-card-link">
-                <div class="game-card">
-                    
-                    <div class="game-card-image">
-                        <img src="https://http2.mlstatic.com/D_NQ_NP_755789-MLU49374892296_032022-O.webp" alt="Juego de Memoria">
-                    </div> 
-                   
-                    <div class="game-card-content">
-                        <h2 class="game-card-title">Juego de Memoria</h2>
-                        <p class="game-card-description">Pon a prueba tu memoria. Cada nivel aumenta tu ganancia.</p>
-                    </div>
-                </div>
-            </a>
-            <a href="dice.html" class="game-card-link">
-                <div class="game-card">
-                    <div class="game-card-image">
-                        <img src="https://blog.iqoption.com/wp-content/uploads/2016/08/dice-gambling-gamble-game-play.jpg" alt="Juego de Dados">
-                    </div> 
-                    <div class="game-card-content">
-                        <h2 class="game-card-title">Dados</h2>
-                        <p class="game-card-description">Elige tu riesgo. Apuesta por un resultado alto o bajo.</p>
-                    </div>
-                </div>
-            </a>
-            <a href="roulette.html" class="game-card-link">
-                <div class="game-card">
-                    <div class="game-card-image">
-                        <img src="https://img.freepik.com/vector-premium/fondo-rueda-fortuna-ilustracion-ruleta-suerte-vector-concepto-casino-linea_165143-1466.jpg?w=2000" alt="Ruleta de la Fortuna">
-                    </div> 
-                    <div class="game-card-content">
-                        <h2 class="game-card-title">Ruleta Diaria</h2>
-                        <p class="game-card-description">¡Gira una vez al día para ganar monedas gratis!</p>
-                    </div>
-                </div>
-            </a>
-            
-        <a href="ruleta.html" class="game-card-link">
-                <div class="game-card">
-                    <div class="game-card-image">
-                        <img src="https://webworks-tokyo.com/wp-content/uploads/2021/07/Roulette-Strategies-explained.jpg" alt="Ruleta de Casino">
-                    </div> 
-                    <div class="game-card-content">
-                        <h2 class="game-card-title">Ruleta</h2>
-                        <p class="game-card-description">Apuesta a tu número o color favorito. ¡La suerte está echada!</p>
-                    </div>
-                </div>
-            </a>
-        </div>
-    </main>
+    <video autoplay muted loop id="video-background">
+        <source src="https://assets.mixkit.co/videos/preview/mixkit-black-and-white-abstract-close-up-of-a-liquid-surface-3023-large.mp4" type="video/mp4">
+        Tu navegador no soporta videos HTML5.
+    </video>
     
-    <script src="script-lobby.js"></script>
+    <div class="video-overlay"></div>
+
+    <div id="welcome-screen">
+        <h1 class="welcome-title">Casino KRULE</h1>
+        <a href="lobby.html" id="enter-lobby-link">
+            <button class="enter-button">Entrar</button>
+        </a>
+    </div>
+
+    <script>
+        const startOverlay = document.getElementById('start-overlay');
+        const welcomeScreen = document.getElementById('welcome-screen');
+       
+        const enterLobbyLink = document.getElementById('enter-lobby-link');
+
+        startOverlay.addEventListener('click', () => {
+          
+            startOverlay.style.opacity = '0';
+            setTimeout(() => startOverlay.style.display = 'none', 500);
+            welcomeScreen.style.opacity = '1';
+        }, { once: true });
+    </script>
 </body>
 </html>
