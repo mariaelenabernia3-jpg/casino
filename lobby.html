@@ -10,9 +10,12 @@
     <link rel="stylesheet" href="style-lobby.css">
 </head>
 <body>
-    <audio id="lobby-music" src="casino-jazz-317385.mp3" loop></audio>
+    <div id="lobby-loading-screen">
+        <img id="lobby-loading-coin" src='data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="%23FFD700" stroke="%23B8860B" stroke-width="5"/><text x="50" y="68" font-size="50" text-anchor="middle" fill="%23B8860B">K</text></svg>' alt="Moneda KRULE">
+        <p class="loading-text">Cargando Lobby...</p>
+    </div>
 
-    <header class="main-header">
+    <header class="main-header" id="main-lobby-header">
         <div class="logo">KRULE</div>
         <nav class="header-nav">
             <a href="lottery.html" class="nav-link">Lotería</a>
@@ -56,7 +59,7 @@
         </div>
     </header>
 
-    <main class="lobby-container">
+    <main class="lobby-container" id="main-lobby-content">
         <h1 class="lobby-title">Nuestros Juegos</h1>
         <div class="game-grid">
            <a href="blackjack.html" class="game-card-link" id="blackjack-link">
