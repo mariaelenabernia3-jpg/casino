@@ -1,69 +1,168 @@
-:root {
-    --primary-green: #00f9a4;
-    --dark-background: #0a0a0a;
-    --card-background: #1a1a1a;
-    --text-color: #EAEAEA;
-    --error-color: #ff4d4d;
-}
+document.addEventListener('DOMContentLoaded', () => {
+   
+    const TICKET_PRICE = 100;
+    const PRIZE_AMOUNT = 5000; 
+    const MAX_NUMBER = 99;
 
-body { margin: 0; font-family: 'Roboto', sans-serif; background-color: var(--dark-background); color: var(--text-color); display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; box-sizing: border-box; }
-.back-to-lobby-link { position: fixed; top: 25px; left: 25px; z-index: 100; transition: transform 0.2s ease; }
-.back-to-lobby-link:hover { transform: scale(1.15); }
-.back-to-lobby-link svg { width: 32px; height: 32px; stroke: var(--primary-green); stroke-width: 2.5; }
 
-.lottery-container { width: 100%; max-width: 500px; text-align: center; }
-.title { font-family: 'Cinzel', serif; font-size: 3em; color: var(--primary-green); text-shadow: 0 0 15px rgba(0, 249, 164, 0.5); margin-bottom: 30px; }
-.card { background-color: var(--card-background); border-radius: 10px; padding: 25px; margin-bottom: 20px; box-shadow: 0 5px 25px rgba(0,0,0,0.5); }
-.card h2 { margin-top: 0; }
+    const previousWinningNumbersDiv = document.getElementById('previous-winning-numbers');
+    const resultMessageP = document.getElementById('result-message');
+    const buyTicketSection = document.getElementById('buy-ticket-section');
+    const numberInputs = document.querySelectorAll('.number-input');
+    const buyButton = document.getElementById('buy-button');
+    const buyErrorMessage = document.getElementById('buy-error-message');
+    const awaitingDrawSection = document.getElementById('awaiting-draw-section');
+    const yourNumbersDiv = document.getElementById('your-numbers');
+    const timerDisplay = document.getElementById('timer');
 
-.winning-numbers, .your-numbers { display: flex; justify-content: center; gap: 15px; margin: 20px 0; }
-.number-ball { width: 50px; height: 50px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 1.5em; font-weight: bold; }
-.previous-draw .number-ball { background: linear-gradient(145deg, var(--primary-green), #00c783); color: #05140d; }
-.current-draw .number-ball { background-color: #333; border: 2px solid var(--primary-green); color: var(--primary-green); }
+    
+    let playerCurrentBalance = 0; 
+    let countdownInterval;
 
-.result-message { font-weight: bold; min-height: 1.2em; }
-.result-message.win { color: var(--primary-green); }
-.result-message.loss { color: #aaa; }
+    
+    async function initialize() { 
+        const jwtToken = localStorage.getItem('jwtToken');
+        if (!jwtToken) {
+            alert('Debes iniciar sesión para jugar.');
+            window.location.href = 'login.html';
+            return;
+        }
 
-.ticket-inputs { display: flex; justify-content: center; gap: 10px; margin-bottom: 15px; }
-.number-input { width: 60px; height: 50px; text-align: center; font-size: 1.5em; background-color: #333; border: 1px solid #555; color: var(--text-color); border-radius: 5px; -moz-appearance: textfield; }
-.number-input::-webkit-outer-spin-button, .number-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-.number-input:focus { border-color: var(--primary-green); outline: none; }
+        try {
+            const userData = await makeApiRequest('GET', '/user/profile');
+            playerCurrentBalance = userData.coins;
 
-.buy-button { background: linear-gradient(145deg, var(--primary-green), #00c783); color: #05140d; border: none; padding: 12px 30px; font-size: 1.1em; font-weight: bold; border-radius: 5px; cursor: pointer; transition: all 0.3s ease; }
-.buy-button:hover { transform: scale(1.05); }
+            buyButton.textContent = `Comprar Boleto (Precio: ${TICKET_PRICE})`;
+            
+            const lotteryInfo = await makeApiRequest('GET', '/games/lottery/info');
 
-.timer-container { font-size: 1.1em; }
-.timer { font-size: 1.8em; font-weight: bold; color: var(--primary-green); letter-spacing: 2px; }
+            if (lotteryInfo.yesterdaysDraw && lotteryInfo.yesterdaysDraw.length === 3) {
+                displayNumbers(previousWinningNumbersDiv, lotteryInfo.yesterdaysDraw);
+                if (lotteryInfo.previousTicketResult) { 
+                    if (lotteryInfo.previousTicketResult.isWin) {
+                        resultMessageP.textContent = `¡Felicidades! Acertaste los números y ganaste ${lotteryInfo.previousTicketResult.prize || PRIZE_AMOUNT} monedas.`;
+                        resultMessageP.className = 'result-message win';
+                    } else {
+                        resultMessageP.textContent = 'No hubo suerte esta vez. ¡Inténtalo de nuevo hoy!';
+                        resultMessageP.className = 'result-message loss';
+                    }
+                } else {
+                     resultMessageP.textContent = 'No participaste en el sorteo anterior.';
+                     resultMessageP.className = 'result-message';
+                }
+            } else {
+                previousWinningNumbersDiv.innerHTML = '<span class="number-ball">?</span><span class="number-ball">?</span><span class="number-ball">?</span>';
+                resultMessageP.textContent = 'Aún no se ha realizado el sorteo anterior o no hay datos.';
+            }
 
-.error-message { color: var(--error-color); min-height: 1.2em; font-weight: bold; display: none; }
+            if (lotteryInfo.userTicketForToday && lotteryInfo.userTicketForToday.length === 3) {
+                buyTicketSection.style.display = 'none';
+                awaitingDrawSection.style.display = 'block';
+                displayNumbers(yourNumbersDiv, lotteryInfo.userTicketForToday);
+            } else {
+                buyTicketSection.style.display = 'block';
+                awaitingDrawSection.style.display = 'none';
+            }
 
-@media (max-width: 768px) {
-    .title {
-        font-size: 2.2em;
-        margin-bottom: 20px;
+            startCountdown();
+            setupEventListeners();
+
+        } catch (error) {
+            console.error('Error al inicializar la lotería:', error);
+            alert('Error al cargar la lotería. Inicia sesión de nuevo.');
+            localStorage.removeItem('jwtToken');
+            localStorage.removeItem('loggedInUserUsername');
+            window.location.href = 'login.html';
+        }
     }
-    .card {
-        padding: 20px;
+
+   
+    async function buyTicket() { 
+        const numbers = [];
+        let isValid = true;
+        const seenNumbers = new Set();
+
+        numberInputs.forEach(input => {
+            const num = parseInt(input.value, 10);
+            if (isNaN(num) || num < 1 || num > MAX_NUMBER) {
+                isValid = false;
+            }
+            if (seenNumbers.has(num)) { 
+                isValid = false;
+            }
+            numbers.push(num);
+            seenNumbers.add(num);
+        });
+
+        if (!isValid) {
+            showError('Por favor, introduce 3 números únicos entre 1 y 99.');
+            return;
+        }
+
+        if (playerCurrentBalance < TICKET_PRICE) {
+            showError('No tienes suficientes monedas para comprar un boleto.');
+            return;
+        }
+
+        try {
+            
+            const response = await makeApiRequest('POST', '/games/lottery/buy', { numbers });
+            
+            playerCurrentBalance = response.newBalance; 
+            
+            alert(response.message || '¡Boleto comprado con éxito! Vuelve mañana para ver los resultados.');
+            
+            buyTicketSection.style.display = 'none';
+            awaitingDrawSection.style.display = 'block';
+            displayNumbers(yourNumbersDiv, numbers); 
+
+        } catch (error) {
+            console.error('Error al comprar el boleto:', error);
+            showError(error.message || 'Error al comprar el boleto. Inténtalo de nuevo.');
+        }
     }
-    .number-ball {
-        width: 40px;
-        height: 40px;
-        font-size: 1.2em;
+
+    function setupEventListeners() {
+        buyButton.addEventListener('click', buyTicket);
     }
-    .ticket-inputs {
-        gap: 8px;
+    
+    function startCountdown() {
+        clearInterval(countdownInterval);
+        countdownInterval = setInterval(() => {
+            const now = new Date();
+            const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 0, 0); 
+            const distance = endOfDay.getTime() - now.getTime();
+            
+            if (distance < 0) { 
+                clearInterval(countdownInterval);
+               
+                initialize(); 
+                return;
+            }
+
+            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+            
+            timerDisplay.textContent = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        }, 1000);
     }
-    .number-input {
-        width: 50px;
-        height: 45px;
-        font-size: 1.2em;
+    
+    function displayNumbers(container, numbers) {
+        container.innerHTML = '';
+        numbers.forEach(num => {
+            const ball = document.createElement('span');
+            ball.className = 'number-ball';
+            ball.textContent = num;
+            container.appendChild(ball);
+        });
     }
-    .buy-button {
-        font-size: 1em;
-        padding: 12px 20px;
+
+    function showError(message) {
+        buyErrorMessage.textContent = message;
+        buyErrorMessage.style.display = 'block';
+        setTimeout(() => { buyErrorMessage.style.display = 'none'; }, 3000);
     }
-    .timer {
-        font-size: 1.5em;
-    }
-}
+    
+    initialize();
+});
