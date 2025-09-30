@@ -13,12 +13,11 @@
 
     <div class="dice-game-container">
         <div class="dice-visual-area">
-            <div class="roll-animation" id="roll-animation">00.00</div>
+            
             <div class="roll-result" id="roll-result">00.00</div>
         </div>
 
         <div class="dice-controls">
-            
             <div class="control-row">
                 <div class="input-box">
                     <label for="bet-amount">Monto de Apuesta</label>
@@ -26,15 +25,14 @@
                 </div>
                 <div class="input-box">
                     <label>Ganancia al Ganar</label>
-                    <p id="profit-on-win">0.00</p>
+                    <p id="profit-on-win">0</p>
                 </div>
             </div>
 
-<div class="slider-container">
-    <input type="range" min="1" max="99" value="50" class="slider" id="chance-slider">
-    
-    <div class="result-ball" id="result-ball"></div>
-</div>
+            <div class="slider-container">
+                <input type="range" min="1" max="99" value="50" class="slider" id="chance-slider">
+                <div class="result-ball" id="result-ball"></div>
+            </div>
 
             <div class="control-row info-displays">
                 <div class="info-box">
@@ -57,15 +55,16 @@
                 <button class="mode-toggle-button" id="roll-over-btn">Roll Over</button>
             </div>
         </div>
+    
+        <p class="balance">Tu Saldo: <span id="player-balance">0</span></p>
     </div>
 
     <div class="game-history">
         <h3>Historial</h3>
-        <div class="history-list" id="history-list">
-        </div>
+        <div class="history-list" id="history-list"></div>
     </div>
     
-  <script src="api.js"></script>
+    <script src="api.js"></script>
     <script src="script-dice.js"></script>
 </body>
 </html>
