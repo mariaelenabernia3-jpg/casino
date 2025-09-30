@@ -1,7 +1,7 @@
-document.addEventListener('DOMContentLoaded', () => {
+ document.addEventListener('DOMContentLoaded', () => {
     
     const blackjackMusic = document.getElementById('blackjack-music');
-
+     
     if (localStorage.getItem('kruleAudioPermission') === 'true') {
         if (blackjackMusic) {
             blackjackMusic.play().catch(e => {
@@ -23,27 +23,26 @@ document.addEventListener('DOMContentLoaded', () => {
         document.addEventListener('click', playMusicOnFirstInteraction, { once: true });
     }
 
-    let deck = []; 
+    
     let dealerHand = [];
     let playerHand = [];
-
     let playerCurrentBalance = 0; 
     let currentGameId = null; 
 
+    
     const dealerScoreEl = document.getElementById('dealer-score');
     const playerScoreEl = document.getElementById('player-score');
     const dealerCardsEl = document.getElementById('dealer-cards');
     const playerCardsEl = document.getElementById('player-cards');
     const gameStatusEl = document.getElementById('game-status');
     const playerBalanceEl = document.getElementById('player-balance');
-    
     const bettingControlsEl = document.getElementById('betting-controls');
     const gameControlsEl = document.getElementById('game-controls');
-    
     const betAmountInput = document.getElementById('bet-amount');
     const dealBtn = document.getElementById('deal-btn');
     const hitBtn = document.getElementById('hit-btn');
     const standBtn = document.getElementById('stand-btn');
+    
     
     async function initialize() { 
         const jwtToken = localStorage.getItem('jwtToken');
@@ -115,14 +114,13 @@ document.addEventListener('DOMContentLoaded', () => {
             dealerHand = response.dealerHand;
             playerCurrentBalance = response.newBalance; 
             updateBalanceDisplay();
-
             renderGame(false); 
 
             const playerScore = calculateScore(playerHand);
-            if (playerScore === 21) {
+            
+            if (response.status === 'game_over') {
                 gameStatusEl.textContent = "¡BLACKJACK!";
-              
-                setTimeout(() => checkGameEndStatus(response), 1000);
+                setTimeout(() => endGame(response), 1000); 
             } else {
                 gameStatusEl.textContent = "¿Pedir o Plantarse?";
             }
@@ -137,6 +135,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function hit() { 
         if (!currentGameId) return;
+        hitBtn.disabled = true; 
 
         try {
             const response = await makeApiRequest('POST', '/games/blackjack/hit', { gameId: currentGameId });
@@ -145,16 +144,12 @@ document.addEventListener('DOMContentLoaded', () => {
             renderGame(false);
             playerScoreEl.textContent = calculateScore(playerHand);
 
-            if (response.status === 'player_bust') {
-                gameStatusEl.textContent = "¡Te pasaste! Pierdes.";
-                playerCurrentBalance = response.newBalance;
+            if (response.status === 'player_bust' || response.status === 'game_over') {
                 endGame(response); 
-            } else if (response.status === 'game_over') { 
-                endGame(response);
             } else {
                 gameStatusEl.textContent = "¿Pedir o Plantarse?";
+                hitBtn.disabled = false;
             }
-
         } catch (error) {
             console.error('Error al pedir carta:', error);
             alert(error.message || 'Error al pedir carta. Inténtalo de nuevo.');
@@ -182,19 +177,19 @@ document.addEventListener('DOMContentLoaded', () => {
             gameStatusEl.textContent = 'Coloca tu apuesta';
         }
     }
-    
-    
+        
     function endGame(apiResponse) {
-        renderGame(true); 
+        renderGame(true);
 
         gameStatusEl.textContent = apiResponse.message;
         playerCurrentBalance = apiResponse.newBalance;
         
         setTimeout(() => {
             updateBalanceDisplay();
-            toggleControls(true);
+            toggleControls(true); 
+            gameStatusEl.textContent = 'Coloca tu apuesta para jugar de nuevo';
             currentGameId = null; 
-        }, 1500);
+        }, 2500); 
     }
     
     function renderGame(revealDealerCard) {
@@ -207,11 +202,11 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         
         playerScoreEl.textContent = calculateScore(playerHand);
-        if(revealDealerCard) {
+        if (revealDealerCard) {
             dealerScoreEl.textContent = calculateScore(dealerHand);
         } else {
            
-            dealerScoreEl.textContent = getCardValue(dealerHand[1].rank); 
+            dealerScoreEl.textContent = dealerHand.length > 1 ? getCardValue(dealerHand[1].rank) : 0; 
         }
     }
 
@@ -221,8 +216,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (isHidden) {
             cardDiv.classList.add('hidden');
         } else {
-            cardDiv.textContent = `${card.rank}${card.suit}`;
-            if (['♥', '♦'].includes(card.suit)) {
+            const suitIcon = card.suit; 
+            cardDiv.innerHTML = `<span>${card.rank}</span><span>${suitIcon}</span>`;
+            if (['♥', '♦'].includes(suitIcon)) {
                 cardDiv.classList.add('red');
             } else {
                 cardDiv.classList.add('black');
@@ -249,3 +245,4 @@ document.addEventListener('DOMContentLoaded', () => {
     
     initialize();
 });
+
