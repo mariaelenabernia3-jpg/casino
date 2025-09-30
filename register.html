@@ -36,29 +36,12 @@
         <p class="form-link">¿Ya tienes una cuenta? <a href="login.html">Inicia sesión aquí</a></p>
     </div>
 
+    <script src="api.js"></script> 
     <script>
-        
-        document.addEventListener('DOMContentLoaded', function() {
-            const users = JSON.parse(localStorage.getItem('kruleUsers')) || [];
-            
-           
-            if (users.length > 0) {
-                
-                document.getElementById('form-container').style.display = 'none';
-                
-                
-                alert('¡Ya existe una cuenta en este dispositivo!\n\nNo se permiten multicuentas. Serás redirigido a la página de inicio de sesión.');
-                
-                
-                window.location.href = 'login.html';
-            }
-        });
-
-
         const form = document.getElementById('register-form');
         const errorMessage = document.getElementById('error-message');
 
-        form.addEventListener('submit', function(event) {
+        form.addEventListener('submit', async function(event) { 
             event.preventDefault(); 
 
             const username = document.getElementById('username').value.trim();
@@ -70,21 +53,24 @@
                 return;
             }
 
-            const users = JSON.parse(localStorage.getItem('kruleUsers')) || [];
-
-            
-            const userExists = users.find(user => user.username === username);
-            if (userExists) {
-                showError('Ese nombre de usuario ya está en uso.');
+            if (username.length < 3) {
+                showError('El nombre de usuario debe tener al menos 3 caracteres.');
+                return;
+            }
+            if (password.length < 6) {
+                showError('La contraseña debe tener al menos 6 caracteres.');
                 return;
             }
 
-            const newUser = { username, password };
-            users.push(newUser);
-            localStorage.setItem('kruleUsers', JSON.stringify(users));
+            try {
+                const response = await makeApiRequest('POST', '/auth/register', { username, password }, false);
+                
+                alert(response.message || '¡Registro exitoso! Ahora puedes iniciar sesión.');
+                window.location.href = 'login.html';
 
-            alert('¡Registro exitoso! Ahora puedes iniciar sesión.');
-            window.location.href = 'login.html';
+            } catch (error) {
+                showError(error.message || 'Error al registrar el usuario. Inténtalo de nuevo.');
+            }
         });
 
         function showError(message) {
