@@ -1,14 +1,5 @@
 const BASE_API_URL = "https://casino-api-rose.vercel.app/api";
 
-/**
- * Realiza una solicitud a la API del casino.
- * @param {string} method 
- * @param {string} endpoint 
- * @param {object} [data=null] 
- * @param {boolean} [needsAuth=true] 
- * @returns {Promise<object>} 
- * @throws {Error} 
- */
 async function makeApiRequest(method, endpoint, data = null, needsAuth = true) {
     const url = `${BASE_API_URL}${endpoint}`;
     const options = {
