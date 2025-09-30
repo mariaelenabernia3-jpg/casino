@@ -1,7 +1,8 @@
- document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', () => {
     
     const blackjackMusic = document.getElementById('blackjack-music');
-     
+
+    
     if (localStorage.getItem('kruleAudioPermission') === 'true') {
         if (blackjackMusic) {
             blackjackMusic.play().catch(e => {
@@ -43,7 +44,6 @@
     const hitBtn = document.getElementById('hit-btn');
     const standBtn = document.getElementById('stand-btn');
     
-    
     async function initialize() { 
         const jwtToken = localStorage.getItem('jwtToken');
         if (!jwtToken) {
@@ -71,9 +71,12 @@
     }
     
     function getCardValue(rank) {
-        if (['J', 'Q', 'K'].includes(rank)) return 10;
-        if (rank === 'A') return 11;
-        return parseInt(rank);
+        if (typeof rank !== 'string' && typeof rank !== 'number') return 0;
+        const rankStr = String(rank);
+        if (['J', 'Q', 'K'].includes(rankStr)) return 10;
+        if (rankStr === 'A') return 11;
+        const num = parseInt(rankStr);
+        return isNaN(num) ? 0 : num;
     }
 
     function calculateScore(hand) {
@@ -116,18 +119,16 @@
             updateBalanceDisplay();
             renderGame(false); 
 
-            const playerScore = calculateScore(playerHand);
-            
             if (response.status === 'game_over') {
                 gameStatusEl.textContent = "¡BLACKJACK!";
-                setTimeout(() => endGame(response), 1000); 
+                setTimeout(() => endGame(response), 1500);
             } else {
                 gameStatusEl.textContent = "¿Pedir o Plantarse?";
             }
 
         } catch (error) {
-            console.error('Error al iniciar la partida de Blackjack:', error);
-            alert(error.message || 'Error al iniciar la partida. Inténtalo de nuevo.');
+            console.error('Error al iniciar la partida:', error);
+            alert(error.message || 'Error al iniciar la partida.');
             toggleControls(true); 
             gameStatusEl.textContent = 'Coloca tu apuesta';
         }
@@ -135,14 +136,12 @@
 
     async function hit() { 
         if (!currentGameId) return;
-        hitBtn.disabled = true; 
+        hitBtn.disabled = true;
 
         try {
             const response = await makeApiRequest('POST', '/games/blackjack/hit', { gameId: currentGameId });
             playerHand = response.playerHand;
-            
             renderGame(false);
-            playerScoreEl.textContent = calculateScore(playerHand);
 
             if (response.status === 'player_bust' || response.status === 'game_over') {
                 endGame(response); 
@@ -152,15 +151,13 @@
             }
         } catch (error) {
             console.error('Error al pedir carta:', error);
-            alert(error.message || 'Error al pedir carta. Inténtalo de nuevo.');
+            alert(error.message || 'Error al pedir carta.');
             toggleControls(true);
-            gameStatusEl.textContent = 'Coloca tu apuesta';
         }
     }
 
     async function stand() { 
         if (!currentGameId) return;
-
         hitBtn.disabled = true;
         standBtn.disabled = true;
         gameStatusEl.textContent = 'El Dealer está jugando...';
@@ -168,29 +165,27 @@
         try {
             const response = await makeApiRequest('POST', '/games/blackjack/stand', { gameId: currentGameId });
             dealerHand = response.dealerHand; 
-            playerCurrentBalance = response.newBalance;
             endGame(response); 
         } catch (error) {
             console.error('Error al plantarse:', error);
-            alert(error.message || 'Error al plantarse. Inténtalo de nuevo.');
+            alert(error.message || 'Error al plantarse.');
             toggleControls(true);
-            gameStatusEl.textContent = 'Coloca tu apuesta';
         }
     }
         
     function endGame(apiResponse) {
-        renderGame(true);
-
-        gameStatusEl.textContent = apiResponse.message;
         playerCurrentBalance = apiResponse.newBalance;
+        renderGame(true);
+        gameStatusEl.textContent = apiResponse.message;
         
         setTimeout(() => {
             updateBalanceDisplay();
-            toggleControls(true); 
-            gameStatusEl.textContent = 'Coloca tu apuesta para jugar de nuevo';
+            toggleControls(true);
+            gameStatusEl.textContent = 'Coloca tu apuesta';
             currentGameId = null; 
-        }, 2500); 
+        }, 2500);
     }
+    
     
     function renderGame(revealDealerCard) {
         dealerCardsEl.innerHTML = '';
@@ -198,27 +193,38 @@
 
         playerHand.forEach(card => renderCard(card, playerCardsEl, false));
         dealerHand.forEach((card, index) => {
+            
             renderCard(card, dealerCardsEl, index === 0 && !revealDealerCard);
         });
         
         playerScoreEl.textContent = calculateScore(playerHand);
+
         if (revealDealerCard) {
             dealerScoreEl.textContent = calculateScore(dealerHand);
         } else {
-           
-            dealerScoreEl.textContent = dealerHand.length > 1 ? getCardValue(dealerHand[1].rank) : 0; 
+            
+            if (dealerHand && dealerHand.length > 1 && dealerHand[1]) {
+                dealerScoreEl.textContent = getCardValue(dealerHand[1].rank);
+            } else {
+                dealerScoreEl.textContent = 0; 
+            }
         }
     }
 
     function renderCard(card, element, isHidden) {
         const cardDiv = document.createElement('div');
         cardDiv.className = 'card';
+        
         if (isHidden) {
             cardDiv.classList.add('hidden');
+        } else if (!card || !card.rank || card.rank === '??') {
+            
+            cardDiv.textContent = '??';
         } else {
-            const suitIcon = card.suit; 
-            cardDiv.innerHTML = `<span>${card.rank}</span><span>${suitIcon}</span>`;
-            if (['♥', '♦'].includes(suitIcon)) {
+            
+            const suit = card.suit;
+            cardDiv.innerHTML = `<span class="rank">${card.rank}</span><span class="suit">${suit}</span>`;
+            if (['♥', '♦'].includes(suit)) {
                 cardDiv.classList.add('red');
             } else {
                 cardDiv.classList.add('black');
@@ -245,4 +251,3 @@
     
     initialize();
 });
-
