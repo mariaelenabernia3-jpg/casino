@@ -1,26 +1,25 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // --- Constantes y Estado del Juego ---
+    
     const COLORS = ['green', 'red', 'yellow', 'blue'];
-    // --- NUEVO: Constantes de Dificultad ---
-    const BASE_FLASH_DURATION = 400; // Velocidad inicial
-    const MIN_FLASH_DURATION = 150;  // Velocidad máxima
-    const SPEED_INCREMENT = 15;      // Cuánto más rápido por nivel (en ms)
-    const PLAYER_TIME_LIMIT = 5000;  // 5 segundos para responder
+    
+    const BASE_FLASH_DURATION = 300;
+    const MIN_FLASH_DURATION = 120;
+    const SPEED_INCREMENT = 20;
+    const PLAYER_TIME_LIMIT = 4500;
+    const DELAY_BETWEEN_FLASHES = 75; 
 
-    let sequence = [];
+    let sequence = []; 
     let playerSequence = [];
     let level = 0;
     let gameActive = false;
     let playerTurn = false;
     let currentBet = 0;
-    let playerTimerId = null; // Para el temporizador
+    let playerTimerId = null;
+    let currentGameId = null; 
 
-    // --- Datos de Usuario (sin cambios) ---
-    let loggedInUser = null;
-    let users = [];
-    let currentUser = null;
+   
+    let playerCurrentBalance = 0; 
 
-    // --- Elementos del DOM ---
     const tiles = document.querySelectorAll('.memory-tile');
     const betAmountInput = document.getElementById('bet-amount');
     const startGameBtn = document.getElementById('start-game-btn');
@@ -28,111 +27,156 @@ document.addEventListener('DOMContentLoaded', () => {
     const statusDisplay = document.getElementById('status-display');
     const levelDisplay = document.getElementById('level-display');
     const multiplierDisplay = document.getElementById('multiplier-display');
-    // --- NUEVO: Elementos del Temporizador ---
     const timerContainer = document.getElementById('timer-container');
     const timerBar = document.getElementById('timer-bar');
 
-    // --- Inicialización (sin cambios) ---
-    function initialize() {
-        loggedInUser = localStorage.getItem('loggedInUser');
-        if (!loggedInUser) {
+    async function initialize() { 
+        const jwtToken = localStorage.getItem('jwtToken');
+        if (!jwtToken) {
             alert('Debes iniciar sesión para jugar.');
             window.location.href = 'login.html';
             return;
         }
-        users = JSON.parse(localStorage.getItem('kruleUsers')) || [];
-        currentUser = users.find(user => user.username === loggedInUser);
-        if (!currentUser) { alert('Error al cargar datos del usuario.'); window.location.href = 'login.html'; return; }
-        
-        setupEventListeners();
-        updateInfoDisplays();
+
+        try {
+            const userData = await makeApiRequest('GET', '/user/profile');
+            playerCurrentBalance = userData.coins; 
+            
+            setupEventListeners();
+            updateInfoDisplays(); 
+        } catch (error) {
+            console.error('Error al cargar el perfil del usuario:', error);
+            alert('Error al cargar datos del usuario. Inicia sesión de nuevo.');
+            localStorage.removeItem('jwtToken');
+            localStorage.removeItem('loggedInUserUsername');
+            window.location.href = 'login.html';
+        }
     }
 
     function setupEventListeners() {
         startGameBtn.addEventListener('click', startGame);
-        cashoutBtn.addEventListener('click', () => endGame(true));
+        cashoutBtn.addEventListener('click', () => endGame(true)); 
         tiles.forEach(tile => {
             tile.addEventListener('click', () => handleTileClick(tile.dataset.color));
         });
     }
 
-    // --- Flujo del Juego ---
-    function startGame() {
+    async function startGame() { 
         currentBet = parseFloat(betAmountInput.value);
-        if (isNaN(currentBet) || currentBet <= 0 || currentBet > currentUser.coins) {
-            alert("Apuesta inválida o fondos insuficientes.");
+        if (isNaN(currentBet) || currentBet <= 0) {
+            alert("Por favor, introduce una apuesta válida.");
             return;
         }
-        currentUser.coins -= currentBet;
-        updateUserData();
-        gameActive = true;
-        level = 0;
-        sequence = [];
-        toggleControls(false);
-        setTimeout(nextLevel, 500);
+        if (currentBet > playerCurrentBalance) {
+            alert("No tienes suficientes monedas para esa apuesta.");
+            return;
+        }
+
+        try {
+           
+            const response = await makeApiRequest('POST', '/games/memory/start', { bet: currentBet });
+            
+            currentGameId = response.gameId;
+            playerCurrentBalance = response.newBalance;
+            sequence = response.nextSequence; 
+            
+            gameActive = true;
+            level = 0; 
+            toggleControls(false);
+            setTimeout(nextLevel, 500); 
+
+        } catch (error) {
+            console.error('Error al iniciar la partida de Memoria:', error);
+            alert(error.message || 'Error al iniciar la partida. Inténtalo de nuevo.');
+        }
     }
 
-    function nextLevel() {
-        stopPlayerTimer(); // Detener cualquier temporizador anterior
+    async function nextLevel() { 
+        stopPlayerTimer();
         playerSequence = [];
         playerTurn = false;
         level++;
         updateInfoDisplays();
         statusDisplay.textContent = 'Observa la secuencia...';
         tiles.forEach(tile => tile.classList.remove('clickable'));
-        const randomColor = COLORS[Math.floor(Math.random() * COLORS.length)];
-        sequence.push(randomColor);
+       
+        if (level > 1) {
+            try {
+    
+            } catch (error) {
+                console.error('Error al obtener la siguiente secuencia:', error);
+                endGame(false);
+                return;
+            }
+        }
         playSequence();
     }
 
-    function playSequence() {
+    async function playSequence() {
         const currentSpeed = calculateSpeed();
-        let i = 0;
-        const intervalId = setInterval(() => {
-            if (i >= sequence.length) {
-                clearInterval(intervalId);
-                playerTurn = true;
-                statusDisplay.textContent = 'Tu turno...';
-                tiles.forEach(tile => tile.classList.add('clickable'));
-                startPlayerTimer(); // Iniciar temporizador del jugador
-                return;
-            }
-            flashTile(sequence[i], currentSpeed);
-            i++;
-        }, currentSpeed + 100); // El delay entre flashes también depende de la velocidad
+        await new Promise(resolve => setTimeout(resolve, 300)); 
+
+        for (const color of sequence) {
+            await new Promise(resolve => {
+                flashTile(color, currentSpeed);
+                setTimeout(resolve, currentSpeed + DELAY_BETWEEN_FLASHES);
+            });
+        }
+        
+        playerTurn = true;
+        statusDisplay.textContent = 'Tu turno...';
+        tiles.forEach(tile => tile.classList.add('clickable'));
+        startPlayerTimer();
     }
 
-    function handleTileClick(color) {
-        if (!playerTurn) return;
+    async function handleTileClick(color) { 
+        if (!playerTurn || !currentGameId) return;
 
-        flashTile(color, 150); // Flash rápido al hacer clic
+        flashTile(color, 150);
         playerSequence.push(color);
 
         const lastIndex = playerSequence.length - 1;
         if (playerSequence[lastIndex] !== sequence[lastIndex]) {
-            endGame(false); // Error
+        
+            endGame(false); 
             return;
         }
 
         if (playerSequence.length === sequence.length) {
             playerTurn = false;
             stopPlayerTimer();
-            setTimeout(nextLevel, 1000);
+            statusDisplay.textContent = 'Correcto. Esperando la siguiente secuencia...';
+            tiles.forEach(tile => tile.classList.remove('clickable'));
+
+            try {
+                const response = await makeApiRequest('POST', '/games/memory/guess', { 
+                    gameId: currentGameId, 
+                    playerSequence: playerSequence 
+                });
+                
+                if (response.result === 'correct') {
+                    sequence = response.nextSequence; 
+                    playerCurrentBalance = response.newBalance; 
+                    setTimeout(nextLevel, 1000);
+                } else {
+                    endGame(false); 
+                }
+
+            } catch (error) {
+                console.error('Error al adivinar secuencia:', error);
+                alert(error.message || 'Error al enviar la secuencia. Juego terminado.');
+                endGame(false);
+            }
         }
     }
     
-    // --- NUEVO: Lógica del Temporizador ---
     function startPlayerTimer() {
         timerBar.style.transition = 'none';
         timerBar.style.width = '100%';
         timerContainer.style.display = 'block';
-
-        // Forzar un reflujo para que la transición se aplique
-        void timerBar.offsetWidth; 
-
+        void timerBar.offsetWidth;
         timerBar.style.transition = `width ${PLAYER_TIME_LIMIT}ms linear`;
         timerBar.style.width = '0%';
-        
         playerTimerId = setTimeout(() => {
             statusDisplay.textContent = '¡Se acabó el tiempo!';
             endGame(false);
@@ -144,31 +188,33 @@ document.addEventListener('DOMContentLoaded', () => {
         timerContainer.style.display = 'none';
     }
 
-    function endGame(isWin) {
+    async function endGame(isCashout) { 
         gameActive = false;
         playerTurn = false;
         stopPlayerTimer();
-        let profit = 0;
-
-        if (isWin && level > 1) {
-            const multiplier = calculateMultiplier(level - 1);
-            profit = currentBet * multiplier;
-            currentUser.coins += profit;
-            statusDisplay.textContent = `¡Ganaste ${profit.toFixed(2)} monedas!`;
-        } else if (isWin && level === 1) {
-            statusDisplay.textContent = 'Retirada. Apuesta devuelta.';
-            currentUser.coins += currentBet; 
+        
+        let message = '';
+        if (isCashout && currentGameId) {
+            try {
+                const response = await makeApiRequest('POST', '/games/memory/cashout', { gameId: currentGameId });
+                playerCurrentBalance = response.newBalance;
+                message = `¡Retirada exitosa! Ganaste ${response.payout.toFixed(2)} monedas.`;
+            } catch (error) {
+                console.error('Error al retirar ganancias:', error);
+                message = error.message || 'Error al intentar retirar. Revisa tu conexión.';
+            }
         } else {
-            statusDisplay.textContent = '¡Incorrecto! Perdiste tu apuesta.';
+            message = '¡Incorrecto! Perdiste tu apuesta.';
+          
         }
         
-        updateUserData();
+        statusDisplay.textContent = message;
         toggleControls(true);
         level = 0;
+        currentGameId = null; 
         updateInfoDisplays();
     }
     
-    // --- Funciones de UI y Lógica ---
     function flashTile(color, duration) {
         const tile = document.querySelector(`.memory-tile[data-color="${color}"]`);
         tile.classList.add('active');
@@ -177,7 +223,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }, duration);
     }
 
-    // --- NUEVO: Cálculo de Velocidad Dinámica ---
     function calculateSpeed() {
         return Math.max(MIN_FLASH_DURATION, BASE_FLASH_DURATION - (level * SPEED_INCREMENT));
     }
@@ -198,20 +243,22 @@ document.addEventListener('DOMContentLoaded', () => {
         if (gameActive && level > 0) {
             const currentMultiplier = calculateMultiplier(level - 1);
             const currentProfit = currentBet * currentMultiplier;
-            cashoutBtn.querySelector('span').textContent = currentProfit.toFixed(2);
+            cashoutBtn.querySelector('span').textContent = (currentBet + currentProfit).toFixed(2);
+        } else {
+            cashoutBtn.querySelector('span').textContent = '0';
         }
     }
     
     function calculateMultiplier(completedLevels) {
         if (completedLevels <= 0) return 0;
-        return parseFloat(Math.pow(1.35, completedLevels).toFixed(2));
-    }
-
-    function updateUserData() {
-        const userIndex = users.findIndex(u => u.username === loggedInUser);
-        if (userIndex !== -1) {
-            users[userIndex] = currentUser;
-            localStorage.setItem('kruleUsers', JSON.stringify(users));
+        switch (completedLevels) {
+            case 1: return 0.10;
+            case 2: return 0.25;
+            case 3: return 0.50;
+            case 4: return 0.85;
+            case 5: return 1.25;
+            default:
+                return parseFloat((1.25 * Math.pow(1.28, completedLevels - 5)).toFixed(2));
         }
     }
 
