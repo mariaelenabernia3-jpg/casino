@@ -175,7 +175,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
     function endGame(apiResponse) {
         playerCurrentBalance = apiResponse.newBalance;
-        renderGame(true);
+        renderGame(true); 
         gameStatusEl.textContent = apiResponse.message;
         
         setTimeout(() => {
@@ -186,15 +186,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 2500);
     }
     
-    
     function renderGame(revealDealerCard) {
         dealerCardsEl.innerHTML = '';
         playerCardsEl.innerHTML = '';
 
-        playerHand.forEach(card => renderCard(card, playerCardsEl, false));
-        dealerHand.forEach((card, index) => {
-            
-            renderCard(card, dealerCardsEl, index === 0 && !revealDealerCard);
+        playerHand.forEach(card => renderCard(card, playerCardsEl, false)); 
+        dealerHand.forEach((card) => { 
+            renderCard(card, dealerCardsEl, !revealDealerCard);
         });
         
         playerScoreEl.textContent = calculateScore(playerHand);
@@ -203,11 +201,7 @@ document.addEventListener('DOMContentLoaded', () => {
             dealerScoreEl.textContent = calculateScore(dealerHand);
         } else {
             
-            if (dealerHand && dealerHand.length > 1 && dealerHand[1]) {
-                dealerScoreEl.textContent = getCardValue(dealerHand[1].rank);
-            } else {
-                dealerScoreEl.textContent = 0; 
-            }
+            dealerScoreEl.textContent = 0; 
         }
     }
 
@@ -217,17 +211,19 @@ document.addEventListener('DOMContentLoaded', () => {
         
         if (isHidden) {
             cardDiv.classList.add('hidden');
-        } else if (!card || !card.rank || card.rank === '??') {
-            
-            cardDiv.textContent = '??';
+            cardDiv.innerHTML = ''; 
         } else {
-            
-            const suit = card.suit;
-            cardDiv.innerHTML = `<span class="rank">${card.rank}</span><span class="suit">${suit}</span>`;
-            if (['♥', '♦'].includes(suit)) {
-                cardDiv.classList.add('red');
+             
+            if (!card || !card.rank || !card.suit) {
+                cardDiv.innerHTML = `<span class="rank">?</span><span class="suit">?</span>`;
             } else {
-                cardDiv.classList.add('black');
+                const suit = card.suit;
+                cardDiv.innerHTML = `<span class="rank">${card.rank}</span><span class="suit">${suit}</span>`;
+                if (['♥', '♦'].includes(suit)) {
+                    cardDiv.classList.add('red');
+                } else {
+                    cardDiv.classList.add('black');
+                }
             }
         }
         element.appendChild(cardDiv);
