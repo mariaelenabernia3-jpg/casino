@@ -11,14 +11,12 @@
 </head>
 <body>
 
-
     <a href="lobby.html" class="back-to-lobby-link" title="Volver al Lobby">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <line x1="19" y1="12" x2="5" y2="12"></line>
             <polyline points="12 19 5 12 12 5"></polyline>
         </svg>
     </a>
-    
 
     <div class="form-container">
         <h1 class="form-title">Iniciar Sesión</h1>
@@ -35,28 +33,37 @@
         <p class="form-link">¿No tienes una cuenta? <a href="register.html">Regístrate aquí</a></p>
     </div>
 
-    <script src="api.js"></script> 
+    <script src="api.js"></script>
     <script>
         const form = document.getElementById('login-form');
         const errorMessage = document.getElementById('error-message');
-        
-        form.addEventListener('submit', async function(event) { 
+
+        form.addEventListener('submit', async function(event) {
             event.preventDefault();
             const username = document.getElementById('username').value.trim();
             const password = document.getElementById('password').value;
-            
+
             try {
                 
                 const response = await makeApiRequest('POST', '/auth/login', { username, password }, false);
-                
+
                 localStorage.setItem('jwtToken', response.token);
                 localStorage.setItem('loggedInUserUsername', response.user.username);
-                
+
                 alert(response.message || `¡Bienvenido de nuevo, ${response.user.username}!`);
                 window.location.href = 'lobby.html';
 
             } catch (error) {
-                showError(error.message || 'Error al iniciar sesión. Verifica tus credenciales.');
+                console.error("Error al iniciar sesión:", error);
+                let displayMessage = 'Error al iniciar sesión. Verifica tus credenciales.';
+
+                if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+                    displayMessage = 'No se pudo conectar al servidor. Verifica tu conexión a internet o intenta más tarde.';
+                } else if (error.message) {
+                    
+                    displayMessage = error.message;
+                }
+                showError(displayMessage);
             }
         });
 
