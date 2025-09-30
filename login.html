@@ -35,22 +35,31 @@
         <p class="form-link">¿No tienes una cuenta? <a href="register.html">Regístrate aquí</a></p>
     </div>
 
+    <script src="api.js"></script> 
     <script>
-        
         const form = document.getElementById('login-form');
         const errorMessage = document.getElementById('error-message');
-        form.addEventListener('submit', function(event) {
+        
+        form.addEventListener('submit', async function(event) { 
             event.preventDefault();
             const username = document.getElementById('username').value.trim();
             const password = document.getElementById('password').value;
-            const users = JSON.parse(localStorage.getItem('kruleUsers')) || [];
-            const foundUser = users.find(user => user.username === username);
-            if (!foundUser) { showError('El usuario no existe. Por favor, regístrate.'); return; }
-            if (foundUser.password !== password) { showError('Contraseña incorrecta. Inténtalo de nuevo.'); return; }
-            alert(`¡Bienvenido de nuevo, ${username}!`);
-            localStorage.setItem('loggedInUser', username);
-            window.location.href = 'lobby.html';
+            
+            try {
+                
+                const response = await makeApiRequest('POST', '/auth/login', { username, password }, false);
+                
+                localStorage.setItem('jwtToken', response.token);
+                localStorage.setItem('loggedInUserUsername', response.user.username);
+                
+                alert(response.message || `¡Bienvenido de nuevo, ${response.user.username}!`);
+                window.location.href = 'lobby.html';
+
+            } catch (error) {
+                showError(error.message || 'Error al iniciar sesión. Verifica tus credenciales.');
+            }
         });
+
         function showError(message) {
             errorMessage.textContent = message;
             errorMessage.style.display = 'block';
