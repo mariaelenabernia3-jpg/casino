@@ -20,19 +20,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const rollResultDisplay = document.getElementById('roll-result');
     const historyList = document.getElementById('history-list');
 
-    let loggedInUser = null;
-    let users = [];
-    let currentUser = null;
+    
+    let playerCurrentBalance = 0; 
     let betMode = 'under';
-
-
-    function updateUserData() {
-        const userIndex = users.findIndex(user => user.username === loggedInUser);
-        if (userIndex !== -1) {
-            users[userIndex] = currentUser;
-            localStorage.setItem('kruleUsers', JSON.stringify(users));
-        }
-    }
 
     function addToHistory(roll, isWin) {
         const item = document.createElement('div');
@@ -56,7 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
             rollConditionLabel.textContent = 'Sacar Más De';
         }
 
-        const effectiveWinChance = (betMode === 'under') ? rollValue : 100 - rollValue;
+        const effectiveWinChance = (betMode === 'under') ? rollValue : (100 - rollValue);
         let multiplier = 0;
         if (effectiveWinChance > 0 && effectiveWinChance < 100) {
             multiplier = (100 / effectiveWinChance) * HOUSE_EDGE;
@@ -70,14 +60,13 @@ document.addEventListener('DOMContentLoaded', () => {
         rollValueDisplay.textContent = rollValue.toFixed(2);
         winChanceDisplay.textContent = `${effectiveWinChance.toFixed(2)}%`;
         multiplierDisplay.textContent = `${multiplier.toFixed(2)}x`;
-        profitOnWinDisplay.textContent = profit; 
+        profitOnWinDisplay.textContent = profit.toFixed(0); 
     }
 
-    function rollDice() {
-        if (!currentUser) { alert('Error: No se encontró el usuario...'); return; }
+    async function rollDice() { 
         const betAmount = parseFloat(betAmountInput.value);
-        if (isNaN(betAmount) || betAmount < MIN_BET) { alert(`La apuesta mínima es...`); return; }
-        if (betAmount > currentUser.coins) { alert('No tienes suficientes monedas...'); return; }
+        if (isNaN(betAmount) || betAmount < MIN_BET) { alert(`La apuesta mínima es ${MIN_BET}.`); return; }
+        if (betAmount > playerCurrentBalance) { alert('No tienes suficientes monedas para esa apuesta.'); return; }
 
         rollDiceBtn.disabled = true;
         chanceSlider.disabled = true;
@@ -88,18 +77,21 @@ document.addEventListener('DOMContentLoaded', () => {
         rollResultDisplay.textContent = '...';
         
         resultBall.style.transition = 'none';
-        
-        resultBall.style.left = '50%';
-        void resultBall.offsetWidth;
+        resultBall.style.left = '50%'; 
+        void resultBall.offsetWidth; 
 
-        setTimeout(() => {
-            currentUser.coins -= betAmount;
-            const rollResult = parseFloat((Math.random() * 100).toFixed(2));
-            const sliderValue = parseInt(chanceSlider.value, 10);
-            
-            const isWin = (betMode === 'under')
-                ? rollResult < sliderValue
-                : rollResult > (100 - sliderValue);
+        try {
+
+            const target = parseInt(chanceSlider.value, 10);
+            const response = await makeApiRequest('POST', '/games/dice/roll', {
+                bet: betAmount,
+                mode: betMode,
+                target: target
+            });
+
+            const rollResult = response.rollResult;
+            const isWin = response.isWin;
+            playerCurrentBalance = response.newBalance; 
 
             const animationSpeed = (ANIMATION_DURATION_MS + ANIMATION_REVEAL_MS) / 1000;
             resultBall.style.transition = `left ${animationSpeed}s cubic-bezier(0.25, 0.46, 0.45, 0.94)`;
@@ -109,18 +101,8 @@ document.addEventListener('DOMContentLoaded', () => {
             rollResultDisplay.textContent = rollResult.toFixed(2);
             rollResultDisplay.classList.add(isWin ? 'win' : 'loss');
             
-            if (isWin) {
-                const effectiveWinChance = (betMode === 'under') ? sliderValue : 100 - (100 - sliderValue);
-                const multiplier = (100 / effectiveWinChance) * HOUSE_EDGE;
-
-                const potentialProfit = betAmount * (multiplier - 1);
-                const profit = Math.floor(Math.max(0, potentialProfit));
-                const totalReturn = betAmount + profit;
-                currentUser.coins += totalReturn;
-            }
-
-            updateUserData();
             addToHistory(rollResult, isWin);
+            updateBalanceDisplay(); 
 
             setTimeout(() => {
                 rollDiceBtn.disabled = false;
@@ -129,7 +111,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 rollOverBtn.disabled = false;
             }, ANIMATION_REVEAL_MS);
 
-        }, 100);
+        } catch (error) {
+            console.error('Error al lanzar dados:', error);
+            alert(error.message || 'Error al lanzar dados. Inténtalo de nuevo.');
+            rollDiceBtn.disabled = false;
+            chanceSlider.disabled = false;
+            rollUnderBtn.disabled = false;
+            rollOverBtn.disabled = false;
+            rollResultDisplay.textContent = '00.00'; 
+        }
     }
     
     function setupEventListeners() {
@@ -140,14 +130,23 @@ document.addEventListener('DOMContentLoaded', () => {
         rollDiceBtn.addEventListener('click', rollDice);
     }
 
-    function initialize() {
-        loggedInUser = localStorage.getItem('loggedInUser');
-        if (!loggedInUser) { alert('Debes iniciar sesión para jugar.'); window.location.href = 'login.html'; return; }
-        users = JSON.parse(localStorage.getItem('kruleUsers')) || [];
-        currentUser = users.find(user => user.username === loggedInUser);
-        if (!currentUser) { alert('Error al cargar los datos del usuario...'); localStorage.removeItem('loggedInUser'); window.location.href = 'login.html'; return; }
-        updateUI();
-        setupEventListeners();
+    async function initialize() { 
+        const jwtToken = localStorage.getItem('jwtToken');
+        if (!jwtToken) { alert('Debes iniciar sesión para jugar.'); window.location.href = 'login.html'; return; }
+        
+        try {
+            const userData = await makeApiRequest('GET', '/user/profile');
+            playerCurrentBalance = userData.coins;
+            
+            updateUI(); 
+            setupEventListeners();
+        } catch (error) {
+            console.error('Error al cargar el perfil del usuario:', error);
+            alert('Error al cargar los datos del usuario. Inicia sesión de nuevo.');
+            localStorage.removeItem('jwtToken');
+            localStorage.removeItem('loggedInUserUsername');
+            window.location.href = 'login.html';
+        }
     }
 
     initialize();
