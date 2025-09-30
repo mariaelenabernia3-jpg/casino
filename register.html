@@ -36,13 +36,13 @@
         <p class="form-link">¿Ya tienes una cuenta? <a href="login.html">Inicia sesión aquí</a></p>
     </div>
 
-    <script src="api.js"></script> 
+    <script src="api.js"></script>
     <script>
         const form = document.getElementById('register-form');
         const errorMessage = document.getElementById('error-message');
 
-        form.addEventListener('submit', async function(event) { 
-            event.preventDefault(); 
+        form.addEventListener('submit', async function(event) {
+            event.preventDefault();
 
             const username = document.getElementById('username').value.trim();
             const password = document.getElementById('password').value;
@@ -64,18 +64,28 @@
 
             try {
                 const response = await makeApiRequest('POST', '/auth/register', { username, password }, false);
-                
+
                 alert(response.message || '¡Registro exitoso! Ahora puedes iniciar sesión.');
                 window.location.href = 'login.html';
 
             } catch (error) {
-                showError(error.message || 'Error al registrar el usuario. Inténtalo de nuevo.');
+                console.error("Error al registrar el usuario:", error); 
+                let displayMessage = 'Error al registrar el usuario. Inténtalo de nuevo.';
+
+                if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+                    displayMessage = 'No se pudo conectar al servidor. Verifica tu conexión a internet o intenta más tarde.';
+                } else if (error.message) {
+                   
+                    displayMessage = error.message;
+                }
+                showError(displayMessage);
             }
         });
 
         function showError(message) {
             errorMessage.textContent = message;
             errorMessage.style.display = 'block';
+          
         }
     </script>
 </body>
