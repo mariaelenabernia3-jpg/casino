@@ -3,23 +3,21 @@ document.addEventListener('DOMContentLoaded', function() {
     const mainLobbyHeader = document.getElementById('main-lobby-header');
     const mainLobbyContent = document.getElementById('main-lobby-content');
 
- 
     if (mainLobbyHeader) mainLobbyHeader.style.display = 'none';
     if (mainLobbyContent) mainLobbyContent.style.display = 'none';
-   
     if (lobbyLoadingScreen) lobbyLoadingScreen.style.display = 'flex'; 
 
-  
     setTimeout(() => {
         if (lobbyLoadingScreen) lobbyLoadingScreen.style.display = 'none';
         if (mainLobbyHeader) mainLobbyHeader.style.display = 'flex';
         if (mainLobbyContent) mainLobbyContent.style.display = 'block'; 
         initializeLobby(); 
     }, 2000); 
+
     const blackjackLink = document.getElementById('blackjack-link');
     if (blackjackLink) {
         blackjackLink.addEventListener('click', () => {
-           
+            
             localStorage.setItem('kruleAudioPermission', 'true');
         });
     }
@@ -45,51 +43,57 @@ document.addEventListener('DOMContentLoaded', function() {
     const cancelEditButton = document.getElementById('cancel-edit-button');
     const editErrorMessage = document.getElementById('edit-error-message');
 
-    let loggedInUser = null;
+    let loggedInUserUsername = null; 
     
     const defaultProfileIconSVG = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="%2300f9a4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>';
 
     
-    function initializeLobby() {
-        loggedInUser = localStorage.getItem('loggedInUser');
-        if (loggedInUser) {
-            registerLink.style.display = 'none';
-            profileSection.style.display = 'flex';
-
-            const users = JSON.parse(localStorage.getItem('kruleUsers')) || [];
-            let currentUser = users.find(user => user.username === loggedInUser);
-            
-            if (currentUser) {
+    async function initializeLobby() { 
+        const jwtToken = localStorage.getItem('jwtToken');
+        if (jwtToken) {
+            try {
                 
-                if (typeof currentUser.coins === 'undefined') { 
-                    currentUser.coins = 0; 
-                    updateUserData(currentUser); 
-                }
-                profilePicImg.src = currentUser.profilePic || defaultProfileIconSVG;
-                headerUsername.textContent = currentUser.username;
-                panelUsernameDisplay.textContent = currentUser.username;
-                balanceAmount.textContent = currentUser.coins;
-            } else { 
+                const userData = await makeApiRequest('GET', '/user/profile');
+                
+                loggedInUserUsername = userData.username; 
+                registerLink.style.display = 'none';
+                profileSection.style.display = 'flex';
+
+                profilePicImg.src = userData.profile_pic_base64 || defaultProfileIconSVG;
+                headerUsername.textContent = userData.username;
+                panelUsernameDisplay.textContent = userData.username;
+                balanceAmount.textContent = userData.coins;
+                
+            } catch (error) {
+                console.error('Error al cargar el perfil:', error);
+                
                 logout(); 
             }
         } else {
+           
             registerLink.style.display = 'block';
             profileSection.style.display = 'none';
         }
     }
 
-    function handleProfilePicChange(event) {
+    async function handleProfilePicChange(event) { 
         const file = event.target.files[0];
         if (!file) return;
+
+        if (file.size > 2 * 1024 * 1024) { 
+            alert('La imagen es demasiado grande. Por favor, elige una imagen menor de 2MB.');
+            return;
+        }
+
         const reader = new FileReader();
-        reader.onload = function(e) {
-            const users = JSON.parse(localStorage.getItem('kruleUsers')) || [];
-            let currentUser = users.find(user => user.username === loggedInUser);
-            if(currentUser) {
-                currentUser.profilePic = e.target.result;
-                profilePicImg.src = e.target.result;
-                updateUserData(currentUser);
-                alert("Foto de perfil actualizada.");
+        reader.onload = async function(e) { 
+            try {
+                
+                await makeApiRequest('PUT', '/user/profile', { profilePic: e.target.result });
+                profilePicImg.src = e.target.result; 
+                alert("Foto de perfil actualizada con éxito.");
+            } catch (error) {
+                alert('Error al actualizar la foto de perfil: ' + (error.message || 'Error desconocido'));
             }
         };
         reader.readAsDataURL(file);
@@ -99,7 +103,7 @@ document.addEventListener('DOMContentLoaded', function() {
         panelUsernameDisplay.style.display = 'none'; 
         editUsernameIcon.style.display = 'none';
         editUsernameForm.style.display = 'flex';
-        newUsernameInput.value = loggedInUser;
+        newUsernameInput.value = loggedInUserUsername; 
         newUsernameInput.focus();
         editErrorMessage.textContent = '';
     }
@@ -110,9 +114,9 @@ document.addEventListener('DOMContentLoaded', function() {
         editErrorMessage.textContent = '';
     }
     
-    function saveNewUsername() {
+    async function saveNewUsername() { 
         const newName = newUsernameInput.value.trim();
-        if (newName === loggedInUser) {
+        if (newName === loggedInUserUsername) { 
             hideEditForm();
             return;
         }
@@ -120,35 +124,29 @@ document.addEventListener('DOMContentLoaded', function() {
             editErrorMessage.textContent = 'El nombre debe tener al menos 3 caracteres.';
             return;
         }
-        const users = JSON.parse(localStorage.getItem('kruleUsers')) || [];
-        if (users.some(user => user.username === newName)) {
-            editErrorMessage.textContent = 'Ese nombre ya está en uso.';
-            return;
-        }
-        let currentUser = users.find(user => user.username === loggedInUser);
-        if (currentUser) {
-            currentUser.username = newName;
-            localStorage.setItem('loggedInUser', newName);
-            loggedInUser = newName;
-            updateUserData(currentUser, users);
+        
+        try {
+            
+            const response = await makeApiRequest('PUT', '/user/profile', { newUsername: newName });
+           
+            if (response.newToken) {
+                localStorage.setItem('jwtToken', response.newToken);
+            }
+            localStorage.setItem('loggedInUserUsername', newName); 
+            loggedInUserUsername = newName; 
+            
             alert('¡Nombre de usuario actualizado!');
             hideEditForm();
             initializeLobby(); 
+        } catch (error) {
+            editErrorMessage.textContent = error.message || 'Error al actualizar el nombre de usuario.';
         }
     }
     
     function logout() {
-        localStorage.removeItem('loggedInUser');
+        localStorage.removeItem('jwtToken');
+        localStorage.removeItem('loggedInUserUsername'); 
         window.location.href = 'lobby.html';
-    }
-
-    function updateUserData(userToUpdate, allUsers) {
-        const users = allUsers || JSON.parse(localStorage.getItem('kruleUsers')) || [];
-        const userIndex = users.findIndex(user => user.username === loggedInUser || user.username === userToUpdate.username);
-        if (userIndex !== -1) {
-            users[userIndex] = userToUpdate;
-            localStorage.setItem('kruleUsers', JSON.stringify(users));
-        }
     }
 
     settingsIcon.addEventListener('click', () => {
