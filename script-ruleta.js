@@ -19,28 +19,55 @@ document.addEventListener('DOMContentLoaded', () => {
     const spinBtn = document.getElementById('spin-btn');
     const clearBtn = document.getElementById('clear-btn');
 
-    let loggedInUser, users, currentUser;
+    let playerCurrentBalance = 0; 
     let currentChipIndex = 1; 
     let totalBet = 0;
-    let bets = {};
+    let bets = {}; 
     let isSpinning = false;
     
-    function initialize() {
-        loggedInUser = localStorage.getItem('loggedInUser');
-        if (!loggedInUser) { alert('Debes iniciar sesión para jugar.'); window.location.href = 'login.html'; return; }
-        users = JSON.parse(localStorage.getItem('kruleUsers')) || [];
-        currentUser = users.find(user => user.username === loggedInUser);
-        if (!currentUser) { alert('Error al cargar datos del usuario.'); window.location.href = 'login.html'; return; }
+    async function initialize() { 
+        const jwtToken = localStorage.getItem('jwtToken');
+        if (!jwtToken) { alert('Debes iniciar sesión para jugar.'); window.location.href = 'login.html'; return; }
         
-        buildBettingTable();
-        createTickerTape();
-        setupEventListeners();
-        updateBalanceDisplay();
-        updateChipDisplay();
+        try {
+            const userData = await makeApiRequest('GET', '/user/profile');
+            playerCurrentBalance = userData.coins;
+            
+            buildBettingTable();
+            createTickerTape();
+            setupEventListeners();
+            updateBalanceDisplay();
+            updateChipDisplay();
+            await loadGameHistory(); 
+        } catch (error) {
+            console.error('Error al cargar el perfil del usuario o historial:', error);
+            alert('Error al cargar datos del usuario. Inicia sesión de nuevo.');
+            localStorage.removeItem('jwtToken');
+            localStorage.removeItem('loggedInUserUsername');
+            window.location.href = 'login.html';
+        }
+    }
+
+    async function loadGameHistory() { 
+        try {
+            const history = await makeApiRequest('GET', '/games/roulette/history');
+            historyNumbersEl.innerHTML = ''; 
+            history.reverse().forEach(entry => { 
+                const color = (entry.winningNumber === 0) ? 'green' : RED_NUMBERS.includes(entry.winningNumber) ? 'red' : 'black';
+                const ball = `<div class="history-ball ${color}">${entry.winningNumber}</div>`;
+                historyNumbersEl.innerHTML = ball + historyNumbersEl.innerHTML;
+            });
+           
+            while (historyNumbersEl.children.length > HISTORY_MAX_LENGTH) {
+                historyNumbersEl.lastChild.remove();
+            }
+        } catch (error) {
+            console.error('Error al cargar el historial de la ruleta:', error);
+         
+        }
     }
 
     function buildBettingTable() {
-
         bettingTable.innerHTML += `<div class="bet-option zero" data-bet="0">0</div>`;
       
         for (let i = 1; i <= 36; i++) {
@@ -96,9 +123,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function placeBet(betType, amount, targetElement) {
-        if (currentUser.coins < totalBet + amount) { updateStatus('Fondos insuficientes', true); return; }
+        if (playerCurrentBalance < totalBet + amount) { updateStatus('Fondos insuficientes', true); return; }
         totalBet += amount;
         bets[betType] = (bets[betType] || 0) + amount;
+        playerCurrentBalance -= amount;
         updateBalanceDisplay();
         
         let chip = targetElement.querySelector('.chip-on-table');
@@ -114,6 +142,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function clearBets() {
         if (isSpinning) return;
+        playerCurrentBalance += totalBet; 
         totalBet = 0;
         bets = {};
         updateBalanceDisplay();
@@ -121,70 +150,63 @@ document.addEventListener('DOMContentLoaded', () => {
         updateStatus('Apuestas limpiadas');
     }
 
-    function spin() {
+    async function spin() { 
         if (isSpinning || totalBet === 0) return;
         isSpinning = true;
         toggleControls(true);
         updateStatus('Girando...');
-        currentUser.coins -= totalBet;
-        updateUserData();
-        updateBalanceDisplay();
         
-        tickerTape.style.transition = 'none';
-        tickerTape.style.transform = 'translateX(0)';
-        void tickerTape.offsetWidth;
+        try {
+          
+            const response = await makeApiRequest('POST', '/games/casino-roulette/spin', { bets: bets });
 
-        const winningNumber = NUMBERS_IN_ORDER[Math.floor(Math.random() * NUMBERS_IN_ORDER.length)];
-        const targetIndex = NUMBERS_IN_ORDER.length * 3 + NUMBERS_IN_ORDER.indexOf(winningNumber);
-        const numberWidth = 50;
-        const randomOffset = (Math.random() - 0.5) * numberWidth * 0.8;
-        const targetPosition = - (targetIndex * numberWidth) + (document.querySelector('.ticker-wrapper').offsetWidth / 2) - (numberWidth / 2) + randomOffset;
-        
-        tickerTape.style.transition = 'transform 7s cubic-bezier(0.25, 1, 0.4, 1)';
-        tickerTape.style.transform = `translateX(${targetPosition}px)`;
+            const winningNumber = response.winningNumber;
+            const newBalance = response.newBalance; 
+            const payout = response.payout;
 
-        setTimeout(() => calculateWinnings(winningNumber), 7500);
+            playerCurrentBalance = newBalance; 
+
+            tickerTape.style.transition = 'none';
+            tickerTape.style.transform = 'translateX(0)';
+            void tickerTape.offsetWidth;
+
+            const targetIndex = NUMBERS_IN_ORDER.length * 3 + NUMBERS_IN_ORDER.indexOf(winningNumber);
+            const numberWidth = 50;
+            const randomOffset = (Math.random() - 0.5) * numberWidth * 0.8;
+            const targetPosition = - (targetIndex * numberWidth) + (document.querySelector('.ticker-wrapper').offsetWidth / 2) - (numberWidth / 2) + randomOffset;
+            
+            tickerTape.style.transition = 'transform 7s cubic-bezier(0.25, 1, 0.4, 1)';
+            tickerTape.style.transform = `translateX(${targetPosition}px)`;
+
+            setTimeout(() => finishRound(winningNumber, payout), 7500); 
+            
+        } catch (error) {
+            console.error('Error al girar la ruleta:', error);
+            updateStatus(error.message || 'Error al girar la ruleta. Inténtalo de nuevo.', true);
+            playerCurrentBalance += totalBet; 
+            totalBet = 0; bets = {};
+            document.querySelectorAll('.chip-on-table').forEach(c => c.remove());
+            updateBalanceDisplay();
+            isSpinning = false;
+            toggleControls(false);
+        }
     }
-    
-    function calculateWinnings(num) {
-        let totalWinnings = 0;
+   
+    function finishRound(winningNumber, payout) {
         const info = {
-            value: num, color: (num === 0) ? 'green' : RED_NUMBERS.includes(num) ? 'red' : 'black',
-            isEven: num !== 0 && num % 2 === 0, isOdd: num % 2 !== 0,
-            isLow: num >= 1 && num <= 18, isHigh: num >= 19 && num <= 36,
-            dozen: Math.ceil(num / 12), column: num > 0 ? (num % 3 === 0 ? 3 : num % 3) : 0
+            value: winningNumber, color: (winningNumber === 0) ? 'green' : RED_NUMBERS.includes(winningNumber) ? 'red' : 'black'
         };
 
-        for (const bet in bets) {
-            const amount = bets[bet];
-            let win = false;
-            let payoutRate = 0;
-            
-            if (!isNaN(bet) && parseInt(bet) === info.value) { win = true; payoutRate = PAYOUTS.straight; }
-            else if (bet === 'red' && info.color === 'red') { win = true; payoutRate = PAYOUTS.simple; }
-            else if (bet === 'black' && info.color === 'black') { win = true; payoutRate = PAYOUTS.simple; }
-            else if (bet === 'even' && info.isEven) { win = true; payoutRate = PAYOUTS.simple; }
-            else if (bet === 'odd' && info.isOdd) { win = true; payoutRate = PAYOUTS.simple; }
-            else if (bet === 'low' && info.isLow) { win = true; payoutRate = PAYOUTS.simple; }
-            else if (bet === 'high' && info.isHigh) { win = true; payoutRate = PAYOUTS.simple; }
-            else if (bet === `dozen${info.dozen}`) { win = true; payoutRate = PAYOUTS.dozen; }
-            else if (bet === `col${info.column}`) { win = true; payoutRate = PAYOUTS.column; }
-            
-            if (win) totalWinnings += amount + (amount * payoutRate);
-        }
-        finishRound(totalWinnings, info);
-    }
-    
-    function finishRound(winnings, info) {
-        if (winnings > 0) {
-            updateStatus(`Gana ${info.value}! Ganaste ${winnings} monedas.`);
-            currentUser.coins += winnings;
+        if (payout > 0) {
+            updateStatus(`Gana ${info.value}! Ganaste ${payout} monedas.`);
         } else {
             updateStatus(`Gana ${info.value}! Mejor suerte la próxima vez.`);
         }
         updateHistory(info);
-        updateUserData();
-        totalBet = 0; bets = {};
+        
+        
+        totalBet = 0; 
+        bets = {};
         document.querySelectorAll('.chip-on-table').forEach(c => c.remove());
         updateBalanceDisplay();
         isSpinning = false;
@@ -192,7 +214,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function updateBalanceDisplay() {
-        playerBalanceEl.textContent = currentUser.coins;
+        playerBalanceEl.textContent = playerCurrentBalance;
         totalBetEl.textContent = totalBet;
     }
     function updateStatus(message, isError = false) {
@@ -210,10 +232,6 @@ document.addEventListener('DOMContentLoaded', () => {
             historyNumbersEl.lastChild.remove();
         }
     }
-    function updateUserData() {
-        const userIndex = users.findIndex(u => u.username === loggedInUser);
-        if (userIndex !== -1) { users[userIndex] = currentUser; localStorage.setItem('kruleUsers', JSON.stringify(users)); }
-    }
-    
+   
     initialize();
 });
