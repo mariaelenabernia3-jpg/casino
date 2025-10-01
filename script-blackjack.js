@@ -2,11 +2,10 @@ document.addEventListener('DOMContentLoaded', () => {
     
     const blackjackMusic = document.getElementById('blackjack-music');
 
-    // Lógica para reproducir música
     if (localStorage.getItem('kruleAudioPermission') === 'true') {
         if (blackjackMusic) {
             blackjackMusic.play().catch(e => {
-                console.warn("Autoplay bloqueado.", e);
+                console.warn("Autoplay bloqueado, se activará con el primer clic.", e);
                 addFallbackClickListener();
             });
         }
@@ -18,27 +17,29 @@ document.addEventListener('DOMContentLoaded', () => {
     function addFallbackClickListener() {
         function playMusicOnFirstInteraction() {
             if (blackjackMusic && blackjackMusic.paused) {
-                blackjackMusic.play().catch(e => console.error("Error al reproducir música.", e));
+                blackjackMusic.play().catch(e => console.error("Error al intentar reproducir música con clic.", e));
             }
         }
         document.addEventListener('click', playMusicOnFirstInteraction, { once: true });
     }
 
-    // Variables del juego
+    let deck = []; 
     let dealerHand = [];
     let playerHand = [];
+
     let playerCurrentBalance = 0; 
     let currentGameId = null; 
 
-    // Elementos del DOM
     const dealerScoreEl = document.getElementById('dealer-score');
     const playerScoreEl = document.getElementById('player-score');
     const dealerCardsEl = document.getElementById('dealer-cards');
     const playerCardsEl = document.getElementById('player-cards');
     const gameStatusEl = document.getElementById('game-status');
     const playerBalanceEl = document.getElementById('player-balance');
+    
     const bettingControlsEl = document.getElementById('betting-controls');
     const gameControlsEl = document.getElementById('game-controls');
+    
     const betAmountInput = document.getElementById('bet-amount');
     const dealBtn = document.getElementById('deal-btn');
     const hitBtn = document.getElementById('hit-btn');
@@ -51,14 +52,15 @@ document.addEventListener('DOMContentLoaded', () => {
             window.location.href = 'login.html';
             return;
         }
+
         try {
             const userData = await makeApiRequest('GET', '/user/profile');
             playerCurrentBalance = userData.coins;
             updateBalanceDisplay();
             setupEventListeners();
         } catch (error) {
-            console.error('Error al cargar el perfil:', error);
-            alert('Error al cargar datos del usuario.');
+            console.error('Error al cargar el perfil del usuario:', error);
+            alert('Error al cargar datos del usuario. Inicia sesión de nuevo.');
             window.location.href = 'login.html';
         }
     }
@@ -70,20 +72,19 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     function getCardValue(rank) {
-        if (typeof rank !== 'string' && typeof rank !== 'number') return 0;
-        const rankStr = String(rank);
-        if (['J', 'Q', 'K'].includes(rankStr)) return 10;
-        if (rankStr === 'A') return 11;
-        const num = parseInt(rankStr);
-        return isNaN(num) ? 0 : num;
+        if (['J', 'Q', 'K'].includes(rank)) return 10;
+        if (rank === 'A') return 11;
+        return parseInt(rank);
     }
 
     function calculateScore(hand) {
         let score = 0;
         let aceCount = 0;
-        (hand || []).forEach(card => {
+        hand.forEach(card => {
             score += getCardValue(card.rank);
-            if (card.rank === 'A') aceCount++;
+            if (card.rank === 'A') {
+                aceCount++;
+            }
         });
         while (score > 21 && aceCount > 0) {
             score -= 10;
@@ -95,11 +96,11 @@ document.addEventListener('DOMContentLoaded', () => {
     async function startNewGame() { 
         const currentBet = parseInt(betAmountInput.value);
         if (isNaN(currentBet) || currentBet <= 0) {
-            alert("Introduce una apuesta válida.");
+            alert("Por favor, introduce una apuesta válida.");
             return;
         }
         if (currentBet > playerCurrentBalance) {
-            alert("No tienes suficientes monedas.");
+            alert("No tienes suficientes monedas para esa apuesta.");
             return;
         }
 
@@ -114,18 +115,21 @@ document.addEventListener('DOMContentLoaded', () => {
             dealerHand = response.dealerHand;
             playerCurrentBalance = response.newBalance; 
             updateBalanceDisplay();
-            renderGame(false);
 
-            if (response.status === 'game_over') {
+            renderGame(false); 
+
+            const playerScore = calculateScore(playerHand);
+            if (playerScore === 21) {
                 gameStatusEl.textContent = "¡BLACKJACK!";
-                setTimeout(() => endGame(response), 1500);
+              
+                setTimeout(() => checkGameEndStatus(response), 1000);
             } else {
                 gameStatusEl.textContent = "¿Pedir o Plantarse?";
             }
 
         } catch (error) {
-            console.error('Error al iniciar partida:', error);
-            alert(error.message || 'Error al iniciar la partida.');
+            console.error('Error al iniciar la partida de Blackjack:', error);
+            alert(error.message || 'Error al iniciar la partida. Inténtalo de nuevo.');
             toggleControls(true); 
             gameStatusEl.textContent = 'Coloca tu apuesta';
         }
@@ -133,30 +137,35 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function hit() { 
         if (!currentGameId) return;
-        hitBtn.disabled = true;
 
         try {
             const response = await makeApiRequest('POST', '/games/blackjack/hit', { gameId: currentGameId });
             playerHand = response.playerHand;
+            
             renderGame(false);
+            playerScoreEl.textContent = calculateScore(playerHand);
 
-            // **LÓGICA PARA PERDER AUTOMÁTICAMENTE**
-            // Si el backend responde que el jugador se ha pasado (bust), se termina el juego.
-            if (response.status === 'player_bust' || response.status === 'game_over') {
+            if (response.status === 'player_bust') {
+                gameStatusEl.textContent = "¡Te pasaste! Pierdes.";
+                playerCurrentBalance = response.newBalance;
                 endGame(response); 
+            } else if (response.status === 'game_over') { 
+                endGame(response);
             } else {
                 gameStatusEl.textContent = "¿Pedir o Plantarse?";
-                hitBtn.disabled = false;
             }
+
         } catch (error) {
             console.error('Error al pedir carta:', error);
-            alert(error.message || 'Error al pedir carta.');
+            alert(error.message || 'Error al pedir carta. Inténtalo de nuevo.');
             toggleControls(true);
+            gameStatusEl.textContent = 'Coloca tu apuesta';
         }
     }
 
     async function stand() { 
         if (!currentGameId) return;
+
         hitBtn.disabled = true;
         standBtn.disabled = true;
         gameStatusEl.textContent = 'El Dealer está jugando...';
@@ -164,75 +173,59 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const response = await makeApiRequest('POST', '/games/blackjack/stand', { gameId: currentGameId });
             dealerHand = response.dealerHand; 
+            playerCurrentBalance = response.newBalance;
             endGame(response); 
         } catch (error) {
             console.error('Error al plantarse:', error);
-            alert(error.message || 'Error al plantarse.');
+            alert(error.message || 'Error al plantarse. Inténtalo de nuevo.');
             toggleControls(true);
+            gameStatusEl.textContent = 'Coloca tu apuesta';
         }
     }
-        
+    
+    
     function endGame(apiResponse) {
-        playerCurrentBalance = apiResponse.newBalance;
-        renderGame(true);
+        renderGame(true); 
+
         gameStatusEl.textContent = apiResponse.message;
+        playerCurrentBalance = apiResponse.newBalance;
         
         setTimeout(() => {
             updateBalanceDisplay();
             toggleControls(true);
-            gameStatusEl.textContent = 'Coloca tu apuesta';
             currentGameId = null; 
-        }, 3000);
+        }, 1500);
     }
     
-    /**
-     * **CORRECCIÓN PRINCIPAL**
-     * Esta función ahora muestra una carta del dealer boca arriba y otra boca abajo.
-     */
     function renderGame(revealDealerCard) {
         dealerCardsEl.innerHTML = '';
         playerCardsEl.innerHTML = '';
 
-        (playerHand || []).forEach(card => renderCard(card, playerCardsEl, false));
-        (dealerHand || []).forEach((card, index) => {
-            // Se oculta la carta si es la primera (index 0) Y no es el final del juego
+        playerHand.forEach(card => renderCard(card, playerCardsEl, false));
+        dealerHand.forEach((card, index) => {
             renderCard(card, dealerCardsEl, index === 0 && !revealDealerCard);
         });
         
         playerScoreEl.textContent = calculateScore(playerHand);
-
-        if (revealDealerCard) {
-            // Al final, muestra la puntuación total del dealer
+        if(revealDealerCard) {
             dealerScoreEl.textContent = calculateScore(dealerHand);
         } else {
-            // Al principio, muestra SOLO el valor de la segunda carta (la visible)
-            // Se añade una comprobación para evitar el error NaN
-            if (dealerHand && dealerHand.length > 1 && dealerHand[1]) {
-                dealerScoreEl.textContent = getCardValue(dealerHand[1].rank);
-            } else {
-                dealerScoreEl.textContent = 0; // Valor seguro si los datos no son correctos
-            }
+           
+            dealerScoreEl.textContent = getCardValue(dealerHand[1].rank); 
         }
     }
 
     function renderCard(card, element, isHidden) {
         const cardDiv = document.createElement('div');
         cardDiv.className = 'card';
-        
         if (isHidden) {
             cardDiv.classList.add('hidden');
         } else {
-            // Maneja el caso de que la carta visible tenga datos inválidos (como ??)
-            if (!card || !card.rank || !card.suit || card.rank === '??') {
-                cardDiv.innerHTML = `<span class="rank">?</span><span class="suit">?</span>`;
+            cardDiv.textContent = `${card.rank}${card.suit}`;
+            if (['♥', '♦'].includes(card.suit)) {
+                cardDiv.classList.add('red');
             } else {
-                const suit = card.suit;
-                cardDiv.innerHTML = `<span class="rank">${card.rank}</span><span class="suit">${suit}</span>`;
-                if (['♥', '♦'].includes(suit)) {
-                    cardDiv.classList.add('red');
-                } else {
-                    cardDiv.classList.add('black');
-                }
+                cardDiv.classList.add('black');
             }
         }
         element.appendChild(cardDiv);
