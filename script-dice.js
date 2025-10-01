@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const MIN_BET = 1;
     const HISTORY_LENGTH = 10;
 
+  
     const resultBall = document.getElementById('result-ball');
     const betAmountInput = document.getElementById('bet-amount');
     const profitOnWinDisplay = document.getElementById('profit-on-win');
@@ -19,10 +20,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const rollDiceBtn = document.getElementById('roll-dice-btn');
     const rollResultDisplay = document.getElementById('roll-result');
     const historyList = document.getElementById('history-list');
+    const playerBalanceEl = document.getElementById('player-balance'); 
 
-    
     let playerCurrentBalance = 0; 
     let betMode = 'under';
+
+    
+    function updateBalanceDisplay() {
+        playerBalanceEl.textContent = playerCurrentBalance;
+    }
 
     function addToHistory(roll, isWin) {
         const item = document.createElement('div');
@@ -81,7 +87,6 @@ document.addEventListener('DOMContentLoaded', () => {
         void resultBall.offsetWidth; 
 
         try {
-
             const target = parseInt(chanceSlider.value, 10);
             const response = await makeApiRequest('POST', '/games/dice/roll', {
                 bet: betAmount,
@@ -102,7 +107,7 @@ document.addEventListener('DOMContentLoaded', () => {
             rollResultDisplay.classList.add(isWin ? 'win' : 'loss');
             
             addToHistory(rollResult, isWin);
-            updateBalanceDisplay(); 
+            updateBalanceDisplay();
 
             setTimeout(() => {
                 rollDiceBtn.disabled = false;
@@ -141,6 +146,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const userData = await makeApiRequest('GET', '/user/profile');
             playerCurrentBalance = userData.coins;
             
+            updateBalanceDisplay();
             updateUI(); 
             setupEventListeners();
             
