@@ -62,3 +62,19 @@ body { margin: 0; font-family: 'Roboto', sans-serif; background-color: var(--dar
     .memory-grid { max-width: 300px; gap: 10px; }
     .status-display { font-size: 1.2em; }
 }
+
+#loading-coin {
+    width: 80px;
+    height: 80px;
+    animation: flip 1.5s linear infinite;
+}
+.loading-text {
+    margin-top: 20px;
+    color: #fff;
+    font-size: 1.2em;
+    letter-spacing: 2px;
+}
+@keyframes flip {
+    from { transform: rotateY(0deg); }
+    to { transform: rotateY(360deg); }
+}
