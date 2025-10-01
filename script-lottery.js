@@ -39,8 +39,11 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const lotteryInfo = await makeApiRequest('GET', '/games/lottery/info');
 
+       
             if (lotteryInfo.yesterdaysDraw && lotteryInfo.yesterdaysDraw.length === 3) {
                 displayNumbers(previousWinningNumbersDiv, lotteryInfo.yesterdaysDraw);
+                
+                
                 if (lotteryInfo.previousTicketResult) { 
                     if (lotteryInfo.previousTicketResult.isWin) {
                         resultMessageP.textContent = `¡Felicidades! Acertaste los números y ganaste ${lotteryInfo.previousTicketResult.prize || PRIZE_AMOUNT} monedas.`;
@@ -50,6 +53,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         resultMessageP.className = 'result-message loss';
                     }
                 } else {
+                     
                      resultMessageP.textContent = 'No participaste en el sorteo anterior.';
                      resultMessageP.className = 'result-message';
                 }
@@ -114,4 +118,33 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const response = await makeApiRequest('POST', '/games/lottery/buy', { numbers });
             
-            playerCurrentBalance = response.newBalance
+            playerCurrentBalance = response.newBalance; 
+            
+            alert(response.message || '¡Boleto comprado con éxito! Vuelve mañana para ver los resultados.');
+            
+            buyTicketSection.style.display = 'none';
+            awaitingDrawSection.style.display = 'block';
+            displayNumbers(yourNumbersDiv, numbers); 
+
+        } catch (error) {
+            console.error('Error al comprar el boleto:', error);
+            showError(error.message || 'Error al comprar el boleto. Inténtalo de nuevo.');
+        }
+    }
+
+    function setupEventListeners() {
+        buyButton.addEventListener('click', buyTicket);
+    }
+    
+    function startCountdown() {
+        clearInterval(countdownInterval);
+        countdownInterval = setInterval(() => {
+            const now = new Date();
+            const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 0, 0); 
+            const distance = endOfDay.getTime() - now.getTime();
+            
+            if (distance < 0) { 
+                clearInterval(countdownInterval);
+               
+                initialize(); 
+       
