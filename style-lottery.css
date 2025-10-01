@@ -36,3 +36,19 @@ body { margin: 0; font-family: 'Roboto', sans-serif; background-color: var(--dar
 .timer { font-size: 1.8em; font-weight: bold; color: var(--primary-green); letter-spacing: 2px; }
 
 .error-message { color: var(--error-color); min-height: 1.2em; font-weight: bold; display: none; }
+
+#loading-coin {
+    width: 80px;
+    height: 80px;
+    animation: flip 1.5s linear infinite;
+}
+.loading-text {
+    margin-top: 20px;
+    color: #fff;
+    font-size: 1.2em;
+    letter-spacing: 2px;
+}
+@keyframes flip {
+    from { transform: rotateY(0deg); }
+    to { transform: rotateY(360deg); }
+}
