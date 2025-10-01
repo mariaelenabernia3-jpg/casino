@@ -7,11 +7,16 @@
     <link rel="stylesheet" href="style-memoria.css">
 </head>
 <body>
+    <div id="game-loading-screen" style="display: flex; flex-direction: column; justify-content: center; align-items: center; width: 100vw; height: 100vh; background-color: #0a0a0a; position: fixed; top: 0; left: 0; z-index: 9999;">
+        <img id="loading-coin" src='data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="%23FFD700" stroke="%23B8860B" stroke-width="5"/><text x="50" y="68" font-size="50" text-anchor="middle" fill="%23B8860B">K</text></svg>' alt="Moneda KRULE">
+        <p class="loading-text">Cargando Memoria...</p>
+    </div>
+
     <a href="lobby.html" class="back-to-lobby-link" title="Volver al Lobby">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 S5 12 12 5"></polyline></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
     </a>
 
-    <div class="memory-game-container">
+    <div class="memory-game-container" id="memory-game-main" style="display: none;">
         <div class="memory-grid-container">
             <div class="memory-grid">
                 <div class="memory-tile color-green" data-color="green"></div>
