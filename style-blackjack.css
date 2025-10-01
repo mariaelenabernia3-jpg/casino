@@ -12,11 +12,30 @@ body { margin: 0; font-family: 'Roboto', sans-serif; background-color: var(--dar
 .back-to-lobby-link:hover { transform: scale(1.15); }
 .back-to-lobby-link svg { width: 32px; height: 32px; stroke: var(--primary-green); stroke-width: 2.5; }
 .blackjack-table { width: 100%; max-width: 800px; background-color: var(--table-background); border: 5px solid #2a5a38; border-radius: 150px / 30px; padding: 40px; box-shadow: 0 10px 40px rgba(0,0,0,0.7); text-align: center; }
-.game-status { min-height: 50px; font-size: 2em; font-family: 'Cinzel', serif; font-weight: bold; margin-bottom: 20px; color: var(--win-color); text-shadow: 2px 2px 5px #000; }
+.game-status { min-height: 50px; font-size: 2em; font-family: 'Cinzel', serif; font-weight: bold; margin-bottom: 20px; color: var(--win-color); text-shadow: 2px 2px 5px #000; transition: all 0.3s ease; }
 .hand-area { min-height: 130px; margin-bottom: 20px; }
 .hand-area h2 { color: #ccc; margin-bottom: 15px; font-size: 1.2em; }
 .cards-container { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
-.card { width: 80px; height: 120px; background-color: var(--card-background); border-radius: 8px; border: 1px solid #ccc; color: #000; font-size: 2em; font-weight: bold; display: flex; justify-content: center; align-items: center; position: relative; box-shadow: 3px 3px 8px rgba(0,0,0,0.5); }
+
+.card { 
+    width: 80px; 
+    height: 120px; 
+    background-color: var(--card-background); 
+    border-radius: 8px; 
+    border: 1px solid #ccc; 
+    color: #000; 
+    font-weight: bold; 
+    position: relative; 
+    box-shadow: 3px 3px 8px rgba(0,0,0,0.5);
+    display: flex;
+    flex-direction: column; 
+    justify-content: center;
+    align-items: center;
+    line-height: 1; 
+}
+.card .rank { font-size: 2.5em; } 
+.card .suit { font-size: 1.5em; margin-top: -5px; } 
+
 .card.hidden { background-image: linear-gradient(135deg, #555 25%, #444 25%, #444 50%, #555 50%, #555 75%, #444 75%, #444 100%); background-size: 40px 40px; color: transparent; }
 .card.red { color: #d90429; }
 .card.black { color: #000; }
@@ -31,14 +50,14 @@ body { margin: 0; font-family: 'Roboto', sans-serif; background-color: var(--dar
 .balance { margin-top: 20px; font-size: 1.1em; color: #ccc; }
 #player-balance { color: var(--primary-green); font-weight: bold; }
 
-
 @media (max-width: 768px) {
     body { padding: 10px; }
     .blackjack-table { padding: 20px; border-radius: 20px; }
     .game-status { font-size: 1.5em; }
-    .card { width: 60px; height: 90px; font-size: 1.5em; border-radius: 5px; }
+    .card { width: 60px; height: 90px; border-radius: 5px; }
+    .card .rank { font-size: 1.8em; }
+    .card .suit { font-size: 1em; }
     .hand-area { min-height: 100px; }
     .controls { flex-direction: column; }
     .action-btn { padding: 12px 20px; font-size: 1em; }
 }
-
