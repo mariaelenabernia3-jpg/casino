@@ -1,16 +1,12 @@
 document.addEventListener('DOMContentLoaded', () => {
     
     // --- PARÁMETROS DE DIFICULTAD AJUSTADOS ---
-
     const COLORS = ['green', 'red', 'yellow', 'blue'];
-    
-    const BASE_FLASH_DURATION = 250;     // CAMBIO: Reducido de 300. La secuencia es más rápida desde el principio.
-    const MIN_FLASH_DURATION = 100;      // CAMBIO: Reducido de 120. La velocidad máxima es aún mayor.
-    const SPEED_INCREMENT = 25;          // CAMBIO: Aumentado de 20. La velocidad aumenta más agresivamente por nivel.
-    const PLAYER_TIME_LIMIT = 3000;      // CAMBIO: Reducido de 4500. Menos tiempo para que el jugador responda.
-    const DELAY_BETWEEN_FLASHES = 50;    // CAMBIO: Reducido de 75. La pausa entre flashes es menor.
-
-    // --- FIN DE PARÁMETROS DE DIFICULTAD ---
+    const BASE_FLASH_DURATION = 250;
+    const MIN_FLASH_DURATION = 100;
+    const SPEED_INCREMENT = 25;
+    const PLAYER_TIME_LIMIT = 3000;
+    const DELAY_BETWEEN_FLASHES = 50;
 
     let sequence = []; 
     let playerSequence = [];
@@ -83,9 +79,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         try {
-           
             const response = await makeApiRequest('POST', '/games/memory/start', { bet: currentBet });
-            
             currentGameId = response.gameId;
             playerCurrentBalance = response.newBalance;
             sequence = response.nextSequence; 
@@ -101,7 +95,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    async function nextLevel() { 
+    function nextLevel() { 
         stopPlayerTimer();
         playerSequence = [];
         playerTurn = false;
@@ -109,20 +103,6 @@ document.addEventListener('DOMContentLoaded', () => {
         updateInfoDisplays();
         statusDisplay.textContent = 'Observa la secuencia...';
         tiles.forEach(tile => tile.classList.remove('clickable'));
-       
-        if (level > 1) {
-            try {
-                const response = await makeApiRequest('POST', '/games/memory/guess', { 
-                    gameId: currentGameId, 
-                    playerSequence: playerSequence 
-                });
-                sequence = response.nextSequence;
-            } catch (error) {
-                console.error('Error al obtener la siguiente secuencia:', error);
-                endGame(false);
-                return;
-            }
-        }
         playSequence();
     }
 
@@ -143,26 +123,51 @@ document.addEventListener('DOMContentLoaded', () => {
         startPlayerTimer();
     }
 
+    // --- INICIO DE LA SECCIÓN CORREGIDA ---
     async function handleTileClick(color) { 
-        if (!playerTurn || !currentGameId) return;
+        if (!playerTurn || !gameActive) return;
 
         flashTile(color, 150);
         playerSequence.push(color);
 
         const lastIndex = playerSequence.length - 1;
+
+        // Comprueba si el clic actual es incorrecto
         if (playerSequence[lastIndex] !== sequence[lastIndex]) {
-            endGame(false); 
+            endGame(false); // Termina el juego si hay un error
             return;
         }
 
+        // Comprueba si la secuencia del nivel actual se ha completado
         if (playerSequence.length === sequence.length) {
             playerTurn = false;
             stopPlayerTimer();
-            statusDisplay.textContent = 'Correcto. Siguiente nivel...';
+            statusDisplay.textContent = '¡Correcto! Cargando siguiente nivel...';
             tiles.forEach(tile => tile.classList.remove('clickable'));
-            setTimeout(nextLevel, 1000);
+
+            // Llama a la API para verificar la secuencia y obtener la siguiente
+            try {
+                const response = await makeApiRequest('POST', '/games/memory/guess', { 
+                    gameId: currentGameId, 
+                    playerSequence: playerSequence 
+                });
+                
+                if (response.result === 'correct') {
+                    sequence = response.nextSequence; // Actualiza la secuencia para el próximo nivel
+                    setTimeout(nextLevel, 1000); // Procede al siguiente nivel
+                } else {
+                    // Esto no debería ocurrir si la lógica del servidor es consistente, pero es una salvaguarda
+                    endGame(false); 
+                }
+
+            } catch (error) {
+                console.error('Error al verificar la secuencia:', error);
+                alert(error.message || 'Error al contactar con el servidor. Juego terminado.');
+                endGame(false);
+            }
         }
     }
+    // --- FIN DE LA SECCIÓN CORREGIDA ---
     
     function startPlayerTimer() {
         timerBar.style.transition = 'none';
@@ -193,23 +198,15 @@ document.addEventListener('DOMContentLoaded', () => {
             try {
                 const response = await makeApiRequest('POST', '/games/memory/cashout', { gameId: currentGameId });
                 playerCurrentBalance = response.newBalance;
-                message = `¡Retirada exitosa! Ganaste ${response.payout.toFixed(2)} monedas.`;
+                message = `¡Retirada exitosa! Ganaste ${response.payout.toFixed(0)} monedas.`;
             } catch (error) {
                 console.error('Error al retirar ganancias:', error);
-                message = error.message || 'Error al intentar retirar. Revisa tu conexión.';
+                message = error.message || 'Error al intentar retirar.';
             }
         } else if (isCashout) {
-            message = "Debes completar al menos el primer nivel para retirar.";
-        }
-        else {
-            try {
-                // Notificar al servidor que el juego terminó por una falla
-                await makeApiRequest('POST', '/games/memory/fail', { gameId: currentGameId });
-                 message = `¡Incorrecto! Perdiste en el nivel ${level}.`;
-            } catch (error) {
-                console.error('Error al notificar la finalización del juego:', error);
-                message = `¡Incorrecto! Perdiste en el nivel ${level}.`;
-            }
+            message = "Debes completar al menos un nivel para retirar.";
+        } else {
+            message = `¡Incorrecto! Perdiste en el nivel ${level}.`;
         }
         
         statusDisplay.textContent = message;
@@ -244,6 +241,7 @@ document.addEventListener('DOMContentLoaded', () => {
         levelDisplay.textContent = level > 0 ? level : '-';
         const nextMultiplier = calculateMultiplier(level + 1);
         multiplierDisplay.textContent = gameActive ? `${nextMultiplier.toFixed(2)}x` : '-';
+
         if (gameActive && level > 0) {
             const currentMultiplier = calculateMultiplier(level);
             const currentProfit = currentBet * currentMultiplier;
@@ -254,13 +252,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     function calculateMultiplier(currentLevel) {
-        if (currentLevel <= 1) return 0;
-        const multipliers = [0, 0.10, 0.25, 0.50, 0.85, 1.25, 1.75, 2.5, 3.5, 5, 7.5]; // Multiplicadores hasta nivel 10
-        if(currentLevel - 1 < multipliers.length){
-            return multipliers[currentLevel-1];
+        // Multiplicador se aplica al nivel *completado*. Si estás en el nivel 1, has completado 0.
+        const completedLevels = currentLevel - 1;
+        if (completedLevels <= 0) return 0;
+        const multipliers = [0.10, 0.25, 0.50, 0.85, 1.25, 1.75, 2.5, 3.5, 5, 7.5]; // Multiplicadores para niveles 1-10 completados
+        if(completedLevels <= multipliers.length){
+            return multipliers[completedLevels-1];
         }
-        // Para niveles superiores a 10, la dificultad es extrema
-        return parseFloat((7.5 * Math.pow(1.35, currentLevel - 11)).toFixed(2));
+        return parseFloat((7.5 * Math.pow(1.35, completedLevels - 10)).toFixed(2));
     }
 
     initialize();
