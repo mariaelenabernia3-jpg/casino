@@ -2,11 +2,11 @@ document.addEventListener('DOMContentLoaded', () => {
     
     const blackjackMusic = document.getElementById('blackjack-music');
 
-    
+    // Lógica para reproducir música
     if (localStorage.getItem('kruleAudioPermission') === 'true') {
         if (blackjackMusic) {
             blackjackMusic.play().catch(e => {
-                console.warn("Autoplay bloqueado, se activará con el primer clic.", e);
+                console.warn("Autoplay bloqueado.", e);
                 addFallbackClickListener();
             });
         }
@@ -18,19 +18,19 @@ document.addEventListener('DOMContentLoaded', () => {
     function addFallbackClickListener() {
         function playMusicOnFirstInteraction() {
             if (blackjackMusic && blackjackMusic.paused) {
-                blackjackMusic.play().catch(e => console.error("Error al intentar reproducir música con clic.", e));
+                blackjackMusic.play().catch(e => console.error("Error al reproducir música.", e));
             }
         }
         document.addEventListener('click', playMusicOnFirstInteraction, { once: true });
     }
 
-    
+    // Variables del juego
     let dealerHand = [];
     let playerHand = [];
     let playerCurrentBalance = 0; 
     let currentGameId = null; 
 
-    
+    // Elementos del DOM
     const dealerScoreEl = document.getElementById('dealer-score');
     const playerScoreEl = document.getElementById('player-score');
     const dealerCardsEl = document.getElementById('dealer-cards');
@@ -51,15 +51,14 @@ document.addEventListener('DOMContentLoaded', () => {
             window.location.href = 'login.html';
             return;
         }
-
         try {
             const userData = await makeApiRequest('GET', '/user/profile');
             playerCurrentBalance = userData.coins;
             updateBalanceDisplay();
             setupEventListeners();
         } catch (error) {
-            console.error('Error al cargar el perfil del usuario:', error);
-            alert('Error al cargar datos del usuario. Inicia sesión de nuevo.');
+            console.error('Error al cargar el perfil:', error);
+            alert('Error al cargar datos del usuario.');
             window.location.href = 'login.html';
         }
     }
@@ -82,11 +81,9 @@ document.addEventListener('DOMContentLoaded', () => {
     function calculateScore(hand) {
         let score = 0;
         let aceCount = 0;
-        hand.forEach(card => {
+        (hand || []).forEach(card => {
             score += getCardValue(card.rank);
-            if (card.rank === 'A') {
-                aceCount++;
-            }
+            if (card.rank === 'A') aceCount++;
         });
         while (score > 21 && aceCount > 0) {
             score -= 10;
@@ -98,11 +95,11 @@ document.addEventListener('DOMContentLoaded', () => {
     async function startNewGame() { 
         const currentBet = parseInt(betAmountInput.value);
         if (isNaN(currentBet) || currentBet <= 0) {
-            alert("Por favor, introduce una apuesta válida.");
+            alert("Introduce una apuesta válida.");
             return;
         }
         if (currentBet > playerCurrentBalance) {
-            alert("No tienes suficientes monedas para esa apuesta.");
+            alert("No tienes suficientes monedas.");
             return;
         }
 
@@ -117,7 +114,7 @@ document.addEventListener('DOMContentLoaded', () => {
             dealerHand = response.dealerHand;
             playerCurrentBalance = response.newBalance; 
             updateBalanceDisplay();
-            renderGame(false); 
+            renderGame(false);
 
             if (response.status === 'game_over') {
                 gameStatusEl.textContent = "¡BLACKJACK!";
@@ -127,7 +124,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
         } catch (error) {
-            console.error('Error al iniciar la partida:', error);
+            console.error('Error al iniciar partida:', error);
             alert(error.message || 'Error al iniciar la partida.');
             toggleControls(true); 
             gameStatusEl.textContent = 'Coloca tu apuesta';
@@ -143,6 +140,8 @@ document.addEventListener('DOMContentLoaded', () => {
             playerHand = response.playerHand;
             renderGame(false);
 
+            // **LÓGICA PARA PERDER AUTOMÁTICAMENTE**
+            // Si el backend responde que el jugador se ha pasado (bust), se termina el juego.
             if (response.status === 'player_bust' || response.status === 'game_over') {
                 endGame(response); 
             } else {
@@ -175,7 +174,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
     function endGame(apiResponse) {
         playerCurrentBalance = apiResponse.newBalance;
-        renderGame(true); 
+        renderGame(true);
         gameStatusEl.textContent = apiResponse.message;
         
         setTimeout(() => {
@@ -183,25 +182,36 @@ document.addEventListener('DOMContentLoaded', () => {
             toggleControls(true);
             gameStatusEl.textContent = 'Coloca tu apuesta';
             currentGameId = null; 
-        }, 2500);
+        }, 3000);
     }
     
+    /**
+     * **CORRECCIÓN PRINCIPAL**
+     * Esta función ahora muestra una carta del dealer boca arriba y otra boca abajo.
+     */
     function renderGame(revealDealerCard) {
         dealerCardsEl.innerHTML = '';
         playerCardsEl.innerHTML = '';
 
-        playerHand.forEach(card => renderCard(card, playerCardsEl, false)); 
-        dealerHand.forEach((card) => { 
-            renderCard(card, dealerCardsEl, !revealDealerCard);
+        (playerHand || []).forEach(card => renderCard(card, playerCardsEl, false));
+        (dealerHand || []).forEach((card, index) => {
+            // Se oculta la carta si es la primera (index 0) Y no es el final del juego
+            renderCard(card, dealerCardsEl, index === 0 && !revealDealerCard);
         });
         
         playerScoreEl.textContent = calculateScore(playerHand);
 
         if (revealDealerCard) {
+            // Al final, muestra la puntuación total del dealer
             dealerScoreEl.textContent = calculateScore(dealerHand);
         } else {
-            
-            dealerScoreEl.textContent = 0; 
+            // Al principio, muestra SOLO el valor de la segunda carta (la visible)
+            // Se añade una comprobación para evitar el error NaN
+            if (dealerHand && dealerHand.length > 1 && dealerHand[1]) {
+                dealerScoreEl.textContent = getCardValue(dealerHand[1].rank);
+            } else {
+                dealerScoreEl.textContent = 0; // Valor seguro si los datos no son correctos
+            }
         }
     }
 
@@ -211,10 +221,9 @@ document.addEventListener('DOMContentLoaded', () => {
         
         if (isHidden) {
             cardDiv.classList.add('hidden');
-            cardDiv.innerHTML = ''; 
         } else {
-             
-            if (!card || !card.rank || !card.suit) {
+            // Maneja el caso de que la carta visible tenga datos inválidos (como ??)
+            if (!card || !card.rank || !card.suit || card.rank === '??') {
                 cardDiv.innerHTML = `<span class="rank">?</span><span class="suit">?</span>`;
             } else {
                 const suit = card.suit;
