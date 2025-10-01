@@ -2,7 +2,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const NUMBERS_IN_ORDER = [0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8, 23, 10, 5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26];
     const RED_NUMBERS = [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36];
-    const PAYOUTS = { 'straight': 35, 'dozen': 2, 'column': 2, 'simple': 1 }; 
+    const PAYOUTS = { 'straight': 35, 'dozen': 2, 'column': 2, 'simple': 1 };
     
     const CHIP_VALUES = [10, 50, 100, 500, 1000];
     const HISTORY_MAX_LENGTH = 10;
@@ -172,7 +172,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const newBalance = response.newBalance; 
             const payout = response.payout;
 
-            playerCurrentBalance = newBalance; 
+            playerCurrentBalance = newBalance;
 
             tickerTape.style.transition = 'none';
             tickerTape.style.transform = 'translateX(0)';
@@ -182,7 +182,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const numberWidth = 50;
             const randomOffset = (Math.random() - 0.5) * numberWidth * 0.8;
             const targetPosition = - (targetIndex * numberWidth) + (document.querySelector('.ticker-wrapper').offsetWidth / 2) - (numberWidth / 2) + randomOffset;
-            
             
             tickerTape.style.transition = 'transform 5.5s cubic-bezier(0.25, 1, 0.4, 1)';
             tickerTape.style.transform = `translateX(${targetPosition}px)`;
