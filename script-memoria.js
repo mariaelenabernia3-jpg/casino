@@ -1,6 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
     
-    // --- PARÁMETROS DE DIFICULTAD AJUSTADOS ---
     const COLORS = ['green', 'red', 'yellow', 'blue'];
     const BASE_FLASH_DURATION = 250;
     const MIN_FLASH_DURATION = 100;
@@ -132,13 +131,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const lastIndex = playerSequence.length - 1;
 
-        // Comprueba si el clic actual es incorrecto
         if (playerSequence[lastIndex] !== sequence[lastIndex]) {
-            endGame(false); // Termina el juego si hay un error
+            endGame(false); 
             return;
         }
 
-        // Comprueba si la secuencia del nivel actual se ha completado
         if (playerSequence.length === sequence.length) {
             playerTurn = false;
             stopPlayerTimer();
@@ -153,10 +150,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
                 
                 if (response.result === 'correct') {
-                    sequence = response.nextSequence; // Actualiza la secuencia para el próximo nivel
-                    setTimeout(nextLevel, 1000); // Procede al siguiente nivel
+                    sequence = response.nextSequence; 
+                    setTimeout(nextLevel, 1000);
                 } else {
-                    // Esto no debería ocurrir si la lógica del servidor es consistente, pero es una salvaguarda
+                  
                     endGame(false); 
                 }
 
@@ -167,7 +164,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     }
-    // --- FIN DE LA SECCIÓN CORREGIDA ---
+ 
     
     function startPlayerTimer() {
         timerBar.style.transition = 'none';
@@ -252,10 +249,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     function calculateMultiplier(currentLevel) {
-        // Multiplicador se aplica al nivel *completado*. Si estás en el nivel 1, has completado 0.
+        
         const completedLevels = currentLevel - 1;
         if (completedLevels <= 0) return 0;
-        const multipliers = [0.10, 0.25, 0.50, 0.85, 1.25, 1.75, 2.5, 3.5, 5, 7.5]; // Multiplicadores para niveles 1-10 completados
+        const multipliers = [0.10, 0.25, 0.50, 0.85, 1.25, 1.75, 2.5, 3.5, 5, 7.5];
         if(completedLevels <= multipliers.length){
             return multipliers[completedLevels-1];
         }
@@ -264,3 +261,4 @@ document.addEventListener('DOMContentLoaded', () => {
 
     initialize();
 });
+
