@@ -1,12 +1,11 @@
 document.addEventListener('DOMContentLoaded', () => {
   
-    
-    const HOUSE_EDGE = 0.99; 
-    const ANIMATION_DURATION_MS = 1500;
+    const HOUSE_EDGE = 1.00; 
+    const ANIMATION_DURATION_MS = 2000;
+    const ANIMATION_REVEAL_MS = 500;
     const MIN_BET = 1;
     const HISTORY_LENGTH = 10;
 
-    
     const resultBall = document.getElementById('result-ball');
     const betAmountInput = document.getElementById('bet-amount');
     const profitOnWinDisplay = document.getElementById('profit-on-win');
@@ -20,7 +19,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const rollDiceBtn = document.getElementById('roll-dice-btn');
     const rollResultDisplay = document.getElementById('roll-result');
     const historyList = document.getElementById('history-list');
-    const playerBalanceEl = document.getElementById('player-balance'); 
 
     
     let playerCurrentBalance = 0; 
@@ -39,37 +37,30 @@ document.addEventListener('DOMContentLoaded', () => {
     function updateUI() {
         const sliderValue = parseInt(chanceSlider.value, 10);
         let rollValue;
-        let winChance;
 
         if (betMode === 'under') {
             rollValue = sliderValue;
-            winChance = sliderValue;
             rollConditionLabel.textContent = 'Sacar Menos De';
         } else {
             rollValue = 100 - sliderValue;
-            winChance = sliderValue;
             rollConditionLabel.textContent = 'Sacar Más De';
         }
-        
+
+        const effectiveWinChance = (betMode === 'under') ? rollValue : (100 - rollValue);
         let multiplier = 0;
-        if (winChance > 0 && winChance < 100) {
-            multiplier = (100 / winChance) * HOUSE_EDGE;
+        if (effectiveWinChance > 0 && effectiveWinChance < 100) {
+            multiplier = (100 / effectiveWinChance) * HOUSE_EDGE;
         }
         
         const betAmount = parseFloat(betAmountInput.value) || 0;
-        const potentialProfit = betAmount * multiplier - betAmount;
         
+        const potentialProfit = betAmount * (multiplier - 1);
+        const profit = Math.floor(Math.max(0, potentialProfit));
+
         rollValueDisplay.textContent = rollValue.toFixed(2);
-        winChanceDisplay.textContent = `${winChance.toFixed(2)}%`;
+        winChanceDisplay.textContent = `${effectiveWinChance.toFixed(2)}%`;
         multiplierDisplay.textContent = `${multiplier.toFixed(2)}x`;
-        profitOnWinDisplay.textContent = potentialProfit.toFixed(0);
-    }
-    
-    
-    function updateBalanceDisplay() {
-        if (playerBalanceEl) {
-            playerBalanceEl.textContent = playerCurrentBalance;
-        }
+        profitOnWinDisplay.textContent = profit.toFixed(0); 
     }
 
     async function rollDice() { 
@@ -77,59 +68,60 @@ document.addEventListener('DOMContentLoaded', () => {
         if (isNaN(betAmount) || betAmount < MIN_BET) { alert(`La apuesta mínima es ${MIN_BET}.`); return; }
         if (betAmount > playerCurrentBalance) { alert('No tienes suficientes monedas para esa apuesta.'); return; }
 
-        toggleControls(false);
+        rollDiceBtn.disabled = true;
+        chanceSlider.disabled = true;
+        rollUnderBtn.disabled = true;
+        rollOverBtn.disabled = true;
         resultBall.classList.remove('win', 'loss');
         rollResultDisplay.classList.remove('win', 'loss');
         rollResultDisplay.textContent = '...';
-        
         
         resultBall.style.transition = 'none';
         resultBall.style.left = '50%'; 
         void resultBall.offsetWidth; 
 
         try {
-            const target = (betMode === 'under') ? parseInt(chanceSlider.value, 10) : 100 - parseInt(chanceSlider.value, 10);
-            
+
+            const target = parseInt(chanceSlider.value, 10);
             const response = await makeApiRequest('POST', '/games/dice/roll', {
                 bet: betAmount,
                 mode: betMode,
                 target: target
             });
 
-            const { rollResult, isWin, newBalance } = response;
-            playerCurrentBalance = newBalance;
+            const rollResult = response.rollResult;
+            const isWin = response.isWin;
+            playerCurrentBalance = response.newBalance; 
 
-            const animationSpeed = ANIMATION_DURATION_MS / 1000;
-            resultBall.style.transition = `left ${animationSpeed}s cubic-bezier(0.25, 0.46, 0.45, 0.94), background-color 0.3s`;
+            const animationSpeed = (ANIMATION_DURATION_MS + ANIMATION_REVEAL_MS) / 1000;
+            resultBall.style.transition = `left ${animationSpeed}s cubic-bezier(0.25, 0.46, 0.45, 0.94)`;
             resultBall.style.left = `${rollResult}%`;
+            resultBall.classList.add(isWin ? 'win' : 'loss');
+
+            rollResultDisplay.textContent = rollResult.toFixed(2);
+            rollResultDisplay.classList.add(isWin ? 'win' : 'loss');
             
+            addToHistory(rollResult, isWin);
+            updateBalanceDisplay(); 
+
             setTimeout(() => {
-                resultBall.classList.add(isWin ? 'win' : 'loss');
-                rollResultDisplay.textContent = rollResult.toFixed(2);
-                rollResultDisplay.classList.add(isWin ? 'win' : 'loss');
-                
-                addToHistory(rollResult, isWin);
-                updateBalanceDisplay();
-    
-                toggleControls(true);
-            }, ANIMATION_DURATION_MS);
+                rollDiceBtn.disabled = false;
+                chanceSlider.disabled = false;
+                rollUnderBtn.disabled = false;
+                rollOverBtn.disabled = false;
+            }, ANIMATION_REVEAL_MS);
 
         } catch (error) {
             console.error('Error al lanzar dados:', error);
             alert(error.message || 'Error al lanzar dados. Inténtalo de nuevo.');
-            toggleControls(true);
-            rollResultDisplay.textContent = 'Error'; 
+            rollDiceBtn.disabled = false;
+            chanceSlider.disabled = false;
+            rollUnderBtn.disabled = false;
+            rollOverBtn.disabled = false;
+            rollResultDisplay.textContent = '00.00'; 
         }
     }
     
-    function toggleControls(enable) {
-        rollDiceBtn.disabled = !enable;
-        chanceSlider.disabled = !enable;
-        rollUnderBtn.disabled = !enable;
-        rollOverBtn.disabled = !enable;
-        betAmountInput.disabled = !enable;
-    }
-
     function setupEventListeners() {
         chanceSlider.addEventListener('input', updateUI);
         betAmountInput.addEventListener('input', updateUI);
@@ -138,7 +130,10 @@ document.addEventListener('DOMContentLoaded', () => {
         rollDiceBtn.addEventListener('click', rollDice);
     }
 
-    async function initialize() { 
+    async function initialize() {
+        const loadingScreen = document.getElementById('game-loading-screen');
+        const gameContainer = document.getElementById('dice-game-main');
+
         const jwtToken = localStorage.getItem('jwtToken');
         if (!jwtToken) { alert('Debes iniciar sesión para jugar.'); window.location.href = 'login.html'; return; }
         
@@ -146,13 +141,17 @@ document.addEventListener('DOMContentLoaded', () => {
             const userData = await makeApiRequest('GET', '/user/profile');
             playerCurrentBalance = userData.coins;
             
-            updateBalanceDisplay(); 
             updateUI(); 
             setupEventListeners();
+            
+            loadingScreen.style.display = 'none';
+            gameContainer.style.display = 'block';
+
         } catch (error) {
             console.error('Error al cargar el perfil del usuario:', error);
             alert('Error al cargar los datos del usuario. Inicia sesión de nuevo.');
             localStorage.removeItem('jwtToken');
+            localStorage.removeItem('loggedInUserUsername');
             window.location.href = 'login.html';
         }
     }
