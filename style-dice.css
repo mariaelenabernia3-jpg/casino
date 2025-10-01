@@ -201,7 +201,18 @@ body {
     font-size: 1.2em;
     letter-spacing: 2px;
 }
+.balance {
+    margin-top: 25px;
+    text-align: center;
+    font-size: 1.1em;
+    color: #ccc;
+}
+#player-balance {
+    color: var(--primary-green);
+    font-weight: bold;
+}
 @keyframes flip {
     from { transform: rotateY(0deg); }
     to { transform: rotateY(360deg); }
 }
+
