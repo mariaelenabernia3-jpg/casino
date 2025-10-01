@@ -21,6 +21,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     
     async function initialize() { 
+        const loadingScreen = document.getElementById('game-loading-screen');
+        const gameContainer = document.getElementById('lottery-container-main');
+
         const jwtToken = localStorage.getItem('jwtToken');
         if (!jwtToken) {
             alert('Debes iniciar sesión para jugar.');
@@ -66,6 +69,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
             startCountdown();
             setupEventListeners();
+            
+            loadingScreen.style.display = 'none';
+            gameContainer.style.display = 'block';
 
         } catch (error) {
             console.error('Error al inicializar la lotería:', error);
@@ -108,61 +114,4 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const response = await makeApiRequest('POST', '/games/lottery/buy', { numbers });
             
-            playerCurrentBalance = response.newBalance; 
-            
-            alert(response.message || '¡Boleto comprado con éxito! Vuelve mañana para ver los resultados.');
-            
-            buyTicketSection.style.display = 'none';
-            awaitingDrawSection.style.display = 'block';
-            displayNumbers(yourNumbersDiv, numbers); 
-
-        } catch (error) {
-            console.error('Error al comprar el boleto:', error);
-            showError(error.message || 'Error al comprar el boleto. Inténtalo de nuevo.');
-        }
-    }
-
-    function setupEventListeners() {
-        buyButton.addEventListener('click', buyTicket);
-    }
-    
-    function startCountdown() {
-        clearInterval(countdownInterval);
-        countdownInterval = setInterval(() => {
-            const now = new Date();
-            const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 0, 0); 
-            const distance = endOfDay.getTime() - now.getTime();
-            
-            if (distance < 0) { 
-                clearInterval(countdownInterval);
-               
-                initialize(); 
-                return;
-            }
-
-            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-            
-            timerDisplay.textContent = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-        }, 1000);
-    }
-    
-    function displayNumbers(container, numbers) {
-        container.innerHTML = '';
-        numbers.forEach(num => {
-            const ball = document.createElement('span');
-            ball.className = 'number-ball';
-            ball.textContent = num;
-            container.appendChild(ball);
-        });
-    }
-
-    function showError(message) {
-        buyErrorMessage.textContent = message;
-        buyErrorMessage.style.display = 'block';
-        setTimeout(() => { buyErrorMessage.style.display = 'none'; }, 3000);
-    }
-    
-    initialize();
-});
+            playerCurrentBalance = response.newBalance
