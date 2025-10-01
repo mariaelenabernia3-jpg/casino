@@ -74,7 +74,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function getCardValue(rank) {
         if (['J', 'Q', 'K'].includes(rank)) return 10;
         if (rank === 'A') return 11;
-        return parseInt(rank);
+        return parseInt(rank, 10) || 0;
     }
 
     function calculateScore(hand) {
@@ -207,11 +207,16 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         
         playerScoreEl.textContent = calculateScore(playerHand);
+
         if(revealDealerCard) {
             dealerScoreEl.textContent = calculateScore(dealerHand);
         } else {
-           
-            dealerScoreEl.textContent = getCardValue(dealerHand[1].rank); 
+          
+            if (dealerHand.length > 1 && dealerHand[1] && typeof dealerHand[1].rank !== 'undefined') {
+                dealerScoreEl.textContent = getCardValue(dealerHand[1].rank);
+            } else {
+                dealerScoreEl.textContent = '?'; 
+            }
         }
     }
 
@@ -221,8 +226,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (isHidden) {
             cardDiv.classList.add('hidden');
         } else {
-            cardDiv.textContent = `${card.rank}${card.suit}`;
-            if (['♥', '♦'].includes(card.suit)) {
+            const rank = card.rank || '??';
+            const suit = card.suit || '';
+            cardDiv.textContent = `${rank}${suit}`;
+            if (['♥', '♦'].includes(suit)) {
                 cardDiv.classList.add('red');
             } else {
                 cardDiv.classList.add('black');
