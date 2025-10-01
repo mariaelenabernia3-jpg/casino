@@ -256,3 +256,10 @@ document.addEventListener('DOMContentLoaded', () => {
     
     initialize();
 });
+window.addEventListener('beforeunload', () => {
+    const music = document.getElementById('blackjack-music');
+    if (music) {
+        music.pause();
+        music.currentTime = 0; 
+    }
+});
