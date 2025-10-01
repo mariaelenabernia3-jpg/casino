@@ -3,7 +3,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const NUMBERS_IN_ORDER = [0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8, 23, 10, 5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26];
     const RED_NUMBERS = [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36];
     const PAYOUTS = { 'straight': 35, 'dozen': 2, 'column': 2, 'simple': 1 };
-    
     const CHIP_VALUES = [10, 50, 100, 500, 1000];
     const HISTORY_MAX_LENGTH = 10;
 
@@ -14,7 +13,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const playerBalanceEl = document.getElementById('player-balance');
     const totalBetEl = document.getElementById('total-bet');
     const chipValueEl = document.getElementById('chip-value');
-    const chipDisplayEl = document.getElementById('chip-display');
     const chipIncreaseBtn = document.getElementById('chip-increase');
     const chipDecreaseBtn = document.getElementById('chip-decrease');
     const spinBtn = document.getElementById('spin-btn');
@@ -26,55 +24,70 @@ document.addEventListener('DOMContentLoaded', () => {
     let bets = {}; 
     let isSpinning = false;
     
+
     async function initialize() { 
         const loadingScreen = document.getElementById('game-loading-screen');
         const gameContainer = document.getElementById('ruleta-game-main');
 
         const jwtToken = localStorage.getItem('jwtToken');
-        if (!jwtToken) { alert('Debes iniciar sesión para jugar.'); window.location.href = 'login.html'; return; }
+        if (!jwtToken) { 
+            alert('Debes iniciar sesión para jugar.'); 
+            window.location.href = 'login.html'; 
+            return; 
+        }
         
         try {
-            const userData = await makeApiRequest('GET', '/user/profile');
+            
+            const [userData, historyData] = await Promise.all([
+                makeApiRequest('GET', '/user/profile'),
+                makeApiRequest('GET', '/games/roulette/history')
+            ]);
+            
             playerCurrentBalance = userData.coins;
+            
+            loadGameHistory(historyData);
             
             buildBettingTable();
             createTickerTape();
             setupEventListeners();
             updateBalanceDisplay();
             updateChipDisplay();
-            await loadGameHistory(); 
             
             loadingScreen.style.display = 'none';
             gameContainer.style.display = 'flex';
 
         } catch (error) {
-            console.error('Error al cargar el perfil del usuario o historial:', error);
-            alert('Error al cargar datos del usuario. Inicia sesión de nuevo.');
+            console.error('Error durante la inicialización de la ruleta:', error);
+            
+            let alertMessage = 'Error al cargar datos del usuario. Inicia sesión de nuevo.';
+            if (error.message.includes('401')) {
+                alertMessage = 'Tu sesión ha expirado o es inválida. Por favor, inicia sesión de nuevo.';
+            } else if (error.message.includes('Failed to fetch')) {
+                alertMessage = 'No se pudo conectar con el servidor. Revisa tu conexión a internet.';
+            }
+
+            alert(alertMessage);
             localStorage.removeItem('jwtToken');
             localStorage.removeItem('loggedInUserUsername');
             window.location.href = 'login.html';
         }
     }
 
-    async function loadGameHistory() { 
-        try {
-            const history = await makeApiRequest('GET', '/games/roulette/history');
-            historyNumbersEl.innerHTML = ''; 
-            history.reverse().forEach(entry => { 
-                const color = (entry.winningNumber === 0) ? 'green' : RED_NUMBERS.includes(entry.winningNumber) ? 'red' : 'black';
-                const ball = `<div class="history-ball ${color}">${entry.winningNumber}</div>`;
-                historyNumbersEl.innerHTML = ball + historyNumbersEl.innerHTML;
-            });
-           
-            while (historyNumbersEl.children.length > HISTORY_MAX_LENGTH) {
-                historyNumbersEl.lastChild.remove();
-            }
-        } catch (error) {
-            console.error('Error al cargar el historial de la ruleta:', error);
+    function loadGameHistory(history) { 
+        historyNumbersEl.innerHTML = ''; 
+        history.reverse().forEach(entry => { 
+            const color = (entry.winningNumber === 0) ? 'green' : RED_NUMBERS.includes(entry.winningNumber) ? 'red' : 'black';
+            const ball = `<div class="history-ball ${color}">${entry.winningNumber}</div>`;
+            historyNumbersEl.innerHTML = ball + historyNumbersEl.innerHTML;
+        });
+       
+        while (historyNumbersEl.children.length > HISTORY_MAX_LENGTH) {
+            historyNumbersEl.lastChild.remove();
         }
     }
 
     function buildBettingTable() {
+        bettingTable.innerHTML = ''; 
         bettingTable.innerHTML += `<div class="bet-option zero" data-bet="0">0</div>`;
       
         for (let i = 1; i <= 36; i++) {
@@ -101,6 +114,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     function createTickerTape() {
         const tapeContent = [...NUMBERS_IN_ORDER, ...NUMBERS_IN_ORDER, ...NUMBERS_IN_ORDER, ...NUMBERS_IN_ORDER, ...NUMBERS_IN_ORDER];
+        tickerTape.innerHTML = ''; 
         tapeContent.forEach(num => {
             const color = (num === 0) ? 'green' : RED_NUMBERS.includes(num) ? 'red' : 'black';
             tickerTape.innerHTML += `<div class="ticker-number ${color}">${num}</div>`;
