@@ -2,7 +2,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const NUMBERS_IN_ORDER = [0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8, 23, 10, 5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26];
     const RED_NUMBERS = [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36];
-    const PAYOUTS = { 'straight': 35, 'dozen': 2, 'column': 2, 'simple': 1 };
+    const PAYOUTS = { 'straight': 35, 'dozen': 2, 'column': 2, 'simple': 1 }; 
+    
     const CHIP_VALUES = [10, 50, 100, 500, 1000];
     const HISTORY_MAX_LENGTH = 10;
 
@@ -26,6 +27,9 @@ document.addEventListener('DOMContentLoaded', () => {
     let isSpinning = false;
     
     async function initialize() { 
+        const loadingScreen = document.getElementById('game-loading-screen');
+        const gameContainer = document.getElementById('ruleta-game-main');
+
         const jwtToken = localStorage.getItem('jwtToken');
         if (!jwtToken) { alert('Debes iniciar sesión para jugar.'); window.location.href = 'login.html'; return; }
         
@@ -39,6 +43,10 @@ document.addEventListener('DOMContentLoaded', () => {
             updateBalanceDisplay();
             updateChipDisplay();
             await loadGameHistory(); 
+            
+            loadingScreen.style.display = 'none';
+            gameContainer.style.display = 'flex';
+
         } catch (error) {
             console.error('Error al cargar el perfil del usuario o historial:', error);
             alert('Error al cargar datos del usuario. Inicia sesión de nuevo.');
@@ -63,7 +71,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch (error) {
             console.error('Error al cargar el historial de la ruleta:', error);
-         
         }
     }
 
@@ -110,7 +117,6 @@ document.addEventListener('DOMContentLoaded', () => {
         clearBtn.addEventListener('click', clearBets);
         spinBtn.addEventListener('click', spin);
     }
-
     
     function changeChip(direction) {
         currentChipIndex = (currentChipIndex + direction + CHIP_VALUES.length) % CHIP_VALUES.length;
@@ -123,7 +129,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function placeBet(betType, amount, targetElement) {
-        if (playerCurrentBalance < totalBet + amount) { updateStatus('Fondos insuficientes', true); return; }
+        if (playerCurrentBalance < amount) {
+             updateStatus('Fondos insuficientes para esta apuesta', true); 
+             return;
+        }
         totalBet += amount;
         bets[betType] = (bets[betType] || 0) + amount;
         playerCurrentBalance -= amount;
@@ -157,7 +166,6 @@ document.addEventListener('DOMContentLoaded', () => {
         updateStatus('Girando...');
         
         try {
-          
             const response = await makeApiRequest('POST', '/games/casino-roulette/spin', { bets: bets });
 
             const winningNumber = response.winningNumber;
@@ -175,10 +183,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const randomOffset = (Math.random() - 0.5) * numberWidth * 0.8;
             const targetPosition = - (targetIndex * numberWidth) + (document.querySelector('.ticker-wrapper').offsetWidth / 2) - (numberWidth / 2) + randomOffset;
             
-            tickerTape.style.transition = 'transform 7s cubic-bezier(0.25, 1, 0.4, 1)';
+            
+            tickerTape.style.transition = 'transform 5.5s cubic-bezier(0.25, 1, 0.4, 1)';
             tickerTape.style.transform = `translateX(${targetPosition}px)`;
 
-            setTimeout(() => finishRound(winningNumber, payout), 7500); 
+            setTimeout(() => finishRound(winningNumber, payout), 5800); 
             
         } catch (error) {
             console.error('Error al girar la ruleta:', error);
@@ -197,13 +206,12 @@ document.addEventListener('DOMContentLoaded', () => {
             value: winningNumber, color: (winningNumber === 0) ? 'green' : RED_NUMBERS.includes(winningNumber) ? 'red' : 'black'
         };
 
-        if (payout > 0) {
-            updateStatus(`Gana ${info.value}! Ganaste ${payout} monedas.`);
+        if (payout > totalBet) {
+            updateStatus(`¡Gana el ${info.value}! Ganaste ${payout - totalBet} monedas.`);
         } else {
-            updateStatus(`Gana ${info.value}! Mejor suerte la próxima vez.`);
+            updateStatus(`Gana el ${info.value}. Mejor suerte la próxima vez.`);
         }
         updateHistory(info);
-        
         
         totalBet = 0; 
         bets = {};
@@ -214,7 +222,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function updateBalanceDisplay() {
-        playerBalanceEl.textContent = playerCurrentBalance;
+        playerBalanceEl.textContent = Math.round(playerCurrentBalance);
         totalBetEl.textContent = totalBet;
     }
     function updateStatus(message, isError = false) {
