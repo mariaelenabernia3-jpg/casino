@@ -31,6 +31,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const timerBar = document.getElementById('timer-bar');
 
     async function initialize() { 
+        const loadingScreen = document.getElementById('game-loading-screen');
+        const gameContainer = document.getElementById('memory-game-main');
+
         const jwtToken = localStorage.getItem('jwtToken');
         if (!jwtToken) {
             alert('Debes iniciar sesión para jugar.');
@@ -44,6 +47,10 @@ document.addEventListener('DOMContentLoaded', () => {
             
             setupEventListeners();
             updateInfoDisplays(); 
+
+            loadingScreen.style.display = 'none';
+            gameContainer.style.display = 'flex';
+
         } catch (error) {
             console.error('Error al cargar el perfil del usuario:', error);
             alert('Error al cargar datos del usuario. Inicia sesión de nuevo.');
