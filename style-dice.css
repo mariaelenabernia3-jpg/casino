@@ -4,8 +4,6 @@
     --card-background: #1a1a1a;
     --text-color: #EAEAEA;
     --error-color: #ff4d4d;
-    --win-color: var(--primary-green);
-    --loss-color: var(--error-color);
 }
 
 body {
@@ -13,11 +11,6 @@ body {
     font-family: 'Roboto', sans-serif;
     background-color: var(--dark-background);
     color: var(--text-color);
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
     padding: 20px;
     box-sizing: border-box;
 }
@@ -33,9 +26,8 @@ body {
 .back-to-lobby-link svg { width: 32px; height: 32px; stroke: var(--primary-green); stroke-width: 2.5; }
 
 .dice-game-container {
-    width: 100%;
     max-width: 600px;
-    margin: 20px auto;
+    margin: 50px auto 20px auto;
     background-color: var(--card-background);
     border-radius: 10px;
     padding: 30px;
@@ -59,36 +51,157 @@ body {
     z-index: 2;
     transition: color 0.3s;
 }
-.roll-result.win { color: var(--win-color); }
-.roll-result.loss { color: var(--loss-color); }
+.roll-result.win { color: var(--primary-green); }
+.roll-result.loss { color: var(--error-color); }
 
-.control-row { display: flex; justify-content: space-between; gap: 20px; margin-bottom: 20px; }
+.control-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    margin-bottom: 20px;
+}
 .input-box { flex: 1; text-align: center; }
-.input-box label, .info-box .label { font-size: 0.9em; color: #aaa; margin-bottom: 5px; display: block; }
-.input-box input { width: 100%; box-sizing: border-box; background-color: #333; border: 1px solid #555; border-radius: 5px; color: var(--text-color); padding: 10px; font-size: 1.2em; text-align: center; }
-.input-box p, .info-box .value { font-size: 1.4em; font-weight: bold; margin: 0; }
-#profit-on-win { color: var(--win-color); }
+.input-box label, .info-box .label {
+    font-size: 0.9em;
+    color: #aaa;
+    margin-bottom: 5px;
+    display: block;
+}
+.input-box input {
+    width: 100%;
+    box-sizing: border-box;
+    background-color: #333;
+    border: 1px solid #555;
+    border-radius: 5px;
+    color: var(--text-color);
+    padding: 10px;
+    font-size: 1.2em;
+    text-align: center;
+}
+.input-box p, .info-box .value {
+    font-size: 1.4em;
+    font-weight: bold;
+    margin: 0;
+}
 .info-box .value { color: var(--primary-green); }
 
-.slider-container { padding: 20px 0; margin-bottom: 10px; position: relative; }
-.slider { -webkit-appearance: none; width: 100%; height: 8px; background: #333; border-radius: 5px; outline: none; }
-.slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 24px; height: 24px; background: var(--primary-green); border-radius: 50%; cursor: pointer; position: relative; z-index: 2; }
+.slider-container {
+    padding: 10px 0;
+    position: relative; 
+}
+.slider {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 8px;
+    background: #333;
+    border-radius: 5px;
+    outline: none;
+}
+.slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 24px;
+    height: 24px;
+    background: var(--primary-green);
+    border-radius: 50%;
+    cursor: pointer;
+    position: relative;
+    z-index: 2;
+}
 
-.result-ball { position: absolute; top: 50%; left: 50%; width: 20px; height: 20px; background-color: #ffffff; border-radius: 50%; transform: translate(-50%, -50%); z-index: 3; box-shadow: 0 0 10px rgba(255, 255, 255, 0.7); transition: left 0.5s cubic-bezier(0.65, 0, 0.35, 1), background-color 0.3s; }
-.result-ball.win { background-color: var(--win-color); box-shadow: 0 0 15px var(--win-color); }
-.result-ball.loss { background-color: var(--loss-color); box-shadow: 0 0 15px var(--loss-color); }
+.result-ball {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    background-color: #ffffff;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 3;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.7);
+    transition: left 0.5s cubic-bezier(0.65, 0, 0.35, 1), background-color 0.3s;
+}
+.result-ball.win {
+    background-color: var(--primary-green);
+    box-shadow: 0 0 15px var(--primary-green);
+}
+.result-ball.loss {
+    background-color: var(--error-color);
+    box-shadow: 0 0 15px var(--error-color);
+}
 
-.action-buttons { display: grid; grid-template-columns: 1fr 2fr 1fr; gap: 10px; }
-.mode-toggle-button { background-color: #333; color: #aaa; border: 1px solid #555; padding: 15px; border-radius: 5px; cursor: pointer; transition: all 0.2s; }
-.mode-toggle-button.active { background-color: var(--primary-green); color: var(--dark-background); border-color: var(--primary-green); font-weight: bold; }
-.roll-dice-button { background: linear-gradient(145deg, var(--primary-green), #00c783); color: #05140d; border: none; font-size: 1.2em; font-weight: bold; border-radius: 5px; cursor: pointer; transition: transform 0.2s; }
-.roll-dice-button:hover:not(:disabled) { transform: scale(1.03); }
-.roll-dice-button:disabled { background: #555; cursor: not-allowed; }
+.action-buttons {
+    display: grid;
+    grid-template-columns: 1fr 2fr 1fr;
+    gap: 10px;
+}
+.mode-toggle-button {
+    background-color: #333;
+    color: #aaa;
+    border: 1px solid #555;
+    padding: 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.mode-toggle-button.active {
+    background-color: var(--primary-green);
+    color: var(--dark-background);
+    border-color: var(--primary-green);
+    font-weight: bold;
+}
+.roll-dice-button {
+    background: linear-gradient(145deg, var(--primary-green), #00c783);
+    color: #05140d;
+    border: none;
+    font-size: 1.2em;
+    font-weight: bold;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+.roll-dice-button:hover:not(:disabled) {
+    transform: scale(1.03);
+}
+.roll-dice-button:disabled {
+    background: #555;
+    cursor: not-allowed;
+}
 
-.balance { margin-top: 20px; font-size: 1.1em; color: #ccc; text-align: center; }
-#player-balance { color: var(--primary-green); font-weight: bold; }
-.game-history { width: 100%; max-width: 600px; margin: 20px auto; text-align: center; }
-.history-list { display: flex; gap: 5px; overflow-x: auto; padding: 10px; justify-content: center; }
-.history-item { min-width: 60px; padding: 8px; border-radius: 5px; font-weight: bold; }
+.game-history {
+    max-width: 600px;
+    margin: 20px auto;
+    text-align: center;
+}
+.history-list {
+    display: flex;
+    gap: 5px;
+    overflow-x: auto;
+    padding: 10px;
+    justify-content: center;
+}
+.history-item {
+    min-width: 60px;
+    padding: 8px;
+    border-radius: 5px;
+    font-weight: bold;
+}
 .history-item.win { background-color: rgba(0, 249, 164, 0.2); }
 .history-item.loss { background-color: rgba(255, 77, 77, 0.2); }
+
+#loading-coin {
+    width: 80px;
+    height: 80px;
+    animation: flip 1.5s linear infinite;
+}
+.loading-text {
+    margin-top: 20px;
+    color: #fff;
+    font-size: 1.2em;
+    letter-spacing: 2px;
+}
+@keyframes flip {
+    from { transform: rotateY(0deg); }
+    to { transform: rotateY(360deg); }
+}
