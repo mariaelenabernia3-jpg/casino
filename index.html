@@ -3,53 +3,111 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
-   
-    <meta http-equiv="refresh" content="4; url=KRULE.html">
-    
-    <title>Cargando KRULE...</title>
-    <style>
-        body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-            background-color: #111;
-        }
-
-        #loading-screen {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            width: 100vw; 
-            height: 100vh; 
-        }
-
-        #coin {
-            width: 80px;
-            height: 80px;
-            animation: flip 1.5s linear infinite;
-        }
-
-        .loading-text {
-            margin-top: 20px;
-            color: #fff;
-            font-size: 1.2em;
-            letter-spacing: 2px;
-        }
-
-        @keyframes flip {
-            from { transform: rotateY(0deg); }
-            to { transform: rotateY(360deg); }
-        }
-    </style>
+    <title>Duelo de Monstruos</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <div id="loading-screen">
-       
-        <img id="coin" src='data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="%23FFD700" stroke="%23B8860B" stroke-width="5"/><text x="50" y="68" font-size="50" text-anchor="middle" fill="%23B8860B">K</text></svg>' alt="Moneda KRULE">
-        <p class="loading-text">Cargando...</p>
+    <!-- Panel de Información de la Carta -->
+    <div id="card-info-panel">
+        <h2 id="card-name">Nombre de la Carta</h2>
+        <p id="card-type">[Tipo]</p>
+        <img id="card-image-preview" src="" alt="Vista previa de la carta">
+        <div id="card-stats">
+            <span>ATK / <span id="card-atk">0</span></span>
+            <span>DEF / <span id="card-def">0</span></span>
+        </div>
+        <div id="card-will-container">
+             <span>Voluntad Maldita / <span id="card-will">0</span></span>
+        </div>
+        <p id="card-description">Pasa el cursor sobre una carta para ver sus detalles.</p>
     </div>
 
+    <!-- Contenedor del Tablero -->
+    <div id="game-board-container">
+        <div id="game-board">
+            
+            <!-- Lado del Oponente -->
+            <div id="opponent-side" class="player-side">
+                <div class="side-field">
+                    <div class="card-zone deck-zone" id="opponent-deck"><div class="card-back"></div></div>
+                    <div class="card-zone extra-deck-zone" id="opponent-extra-deck"></div>
+                </div>
+                <div class="main-field">
+                    <div class="upper-row">
+                        <div class="card-zone field-spell-zone" id="opponent-field-spell"></div>
+                        <div class="card-zone graveyard-zone" id="opponent-graveyard"></div>
+                    </div>
+                    <div class="spell-trap-row field-row">
+                        <div class="card-zone spell-trap-zone pendulum-zone" id="opponent-pendulum-left"></div>
+                        <div class="card-zone spell-trap-zone"></div>
+                        <div class="card-zone spell-trap-zone pendulum-zone" id="opponent-pendulum-right"></div>
+                    </div>
+                    <div class="monster-row field-row">
+                        <div class="card-zone monster-zone"></div>
+                        <div class="card-zone monster-zone"></div>
+                        <div class="card-zone monster-zone"></div>
+                        <div class="card-zone monster-zone"></div>
+                    </div>
+                </div>
+                <div class="hand-container">
+                    <div class="hand" id="opponent-hand"></div>
+                    <div class="life-bar-container">
+                        <div class="life-bar-background">
+                            <div class="life-bar-fill opponent-lp-bar" id="opponent-lp-bar"></div>
+                            <span class="life-bar-text" id="opponent-lp">20 / 20</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Zona Central -->
+            <div id="center-field">
+                <div class="card-zone extra-monster-zone" id="extra-monster-1"></div>
+                <button id="next-phase-btn">Fase</button>
+                <div class="card-zone extra-monster-zone" id="extra-monster-2"></div>
+            </div>
+
+            <!-- Lado del Jugador -->
+            <div id="player-side" class="player-side">
+                <div class="side-field">
+                    <div class="card-zone deck-zone" id="player-deck"><div class="card-back"></div></div>
+                    <div class="card-zone extra-deck-zone" id="player-extra-deck"></div>
+                </div>
+                <div class="main-field">
+                    <div class="monster-row field-row">
+                        <div class="card-zone monster-zone"></div>
+                        <div class="card-zone monster-zone"></div>
+                        <div class="card-zone monster-zone"></div>
+                        <div class="card-zone monster-zone"></div>
+                    </div>
+                    <div class="spell-trap-row field-row">
+                        <div class="card-zone spell-trap-zone pendulum-zone" id="player-pendulum-left"></div>
+                        <div class="card-zone spell-trap-zone"></div>
+                        <div class="card-zone spell-trap-zone pendulum-zone" id="player-pendulum-right"></div>
+                    </div>
+                    <div class="upper-row">
+                        <div class="card-zone field-spell-zone" id="player-field-spell"></div>
+                        <div class="card-zone graveyard-zone" id="player-graveyard"></div>
+                    </div>
+                </div>
+                <div class="hand-container">
+                    <div class="hand" id="player-hand"></div>
+                     <div class="life-bar-container">
+                        <div class="life-bar-background">
+                            <div class="life-bar-fill player-lp-bar" id="player-lp-bar"></div>
+                            <span class="life-bar-text" id="player-lp">20 / 20</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="script.js"></script>
 </body>
-</html>
+    </html>
