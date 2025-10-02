@@ -112,7 +112,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             currentGameId = response.gameId;
             playerHand = response.playerHand;
-            dealerHand = response.dealerHand;
+            dealerHand = response.dealHand;
             playerCurrentBalance = response.newBalance; 
             updateBalanceDisplay();
 
@@ -263,3 +263,4 @@ window.addEventListener('beforeunload', () => {
         music.currentTime = 0; 
     }
 });
+
