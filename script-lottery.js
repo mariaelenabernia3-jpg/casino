@@ -1,7 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
    
     const TICKET_PRICE = 100;
-    const PRIZE_AMOUNT = 5000; 
     const MAX_NUMBER = 99;
 
     const previousWinningNumbersDiv = document.getElementById('previous-winning-numbers');
@@ -31,32 +30,29 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const userData = await makeApiRequest('GET', '/user/profile');
             playerCurrentBalance = userData.coins;
-
             buyButton.textContent = `Comprar Boleto (Precio: ${TICKET_PRICE})`;
             
             const lotteryInfo = await makeApiRequest('GET', '/games/lottery/info');
 
-            // --- INICIO DE LA SECCIÓN CRÍTICA CORREGIDA ---
+            // CORRECCIÓN: Se comprueba si 'previousTicketResult' existe antes de usarlo.
             if (lotteryInfo.yesterdaysDraw && lotteryInfo.yesterdaysDraw.length === 3) {
                 displayNumbers(previousWinningNumbersDiv, lotteryInfo.yesterdaysDraw);
                 
-                // Comprobación robusta: nos aseguramos de que el objeto exista antes de usarlo
                 if (lotteryInfo.previousTicketResult) { 
                     if (lotteryInfo.previousTicketResult.isWin) {
-                        resultMessageP.textContent = `¡Felicidades! Acertaste los números y ganaste ${lotteryInfo.previousTicketResult.prize || PRIZE_AMOUNT} monedas.`;
+                        resultMessageP.textContent = `¡Felicidades! Ganaste ${lotteryInfo.previousTicketResult.prize} monedas.`;
                         resultMessageP.className = 'result-message win';
                     } else {
                         resultMessageP.textContent = 'No hubo suerte esta vez. ¡Inténtalo de nuevo hoy!';
                         resultMessageP.className = 'result-message loss';
                     }
                 } else {
-                     // Esto se mostrará si el usuario no jugó ayer
                      resultMessageP.textContent = 'No participaste en el sorteo anterior.';
                      resultMessageP.className = 'result-message';
                 }
             } else {
                 previousWinningNumbersDiv.innerHTML = '<span class="number-ball">?</span><span class="number-ball">?</span><span class="number-ball">?</span>';
-                resultMessageP.textContent = 'Aún no se ha realizado el sorteo anterior o no hay datos.';
+                resultMessageP.textContent = 'Aún no hay datos del sorteo anterior.';
             }
 
             if (lotteryInfo.userTicketForToday && lotteryInfo.userTicketForToday.length === 3) {
@@ -67,21 +63,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 buyTicketSection.style.display = 'block';
                 awaitingDrawSection.style.display = 'none';
             }
-            // --- FIN DE LA SECCIÓN CORREGIDA ---
 
             startCountdown();
             setupEventListeners();
             
-            // Esta línea ahora debería ejecutarse sin problemas
             loadingScreen.style.display = 'none';
             gameContainer.style.display = 'block';
 
         } catch (error) {
             console.error('Error al inicializar la lotería:', error);
-            // Si hay un error, el usuario verá una alerta y será redirigido.
             alert('Error al cargar la lotería. Intenta iniciar sesión de nuevo.');
-            localStorage.removeItem('jwtToken');
-            localStorage.removeItem('loggedInUserUsername');
             window.location.href = 'login.html';
         }
     }
@@ -93,17 +84,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
         numberInputs.forEach(input => {
             const num = parseInt(input.value, 10);
-            if (isNaN(num) || num < 1 || num > MAX_NUMBER) {
-                isValid = false;
-            }
-            if (seenNumbers.has(num)) { 
+            if (isNaN(num) || num < 1 || num > MAX_NUMBER || seenNumbers.has(num)) {
                 isValid = false;
             }
             numbers.push(num);
             seenNumbers.add(num);
         });
 
-        if (!isValid) {
+        if (!isValid || seenNumbers.size !== 3) {
             showError('Por favor, introduce 3 números únicos entre 1 y 99.');
             return;
         }
@@ -117,7 +105,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const response = await makeApiRequest('POST', '/games/lottery/buy', { numbers });
             playerCurrentBalance = response.newBalance; 
             
-            alert(response.message || '¡Boleto comprado con éxito! Vuelve mañana para ver los resultados.');
+            alert(response.message || '¡Boleto comprado con éxito!');
             
             buyTicketSection.style.display = 'none';
             awaitingDrawSection.style.display = 'block';
@@ -125,7 +113,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         } catch (error) {
             console.error('Error al comprar el boleto:', error);
-            showError(error.message || 'Error al comprar el boleto. Inténtalo de nuevo.');
+            showError(error.message || 'Error al comprar el boleto.');
         }
     }
 
@@ -142,7 +130,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             if (distance < 0) { 
                 clearInterval(countdownInterval);
-                initialize(); 
+                location.reload(); 
                 return;
             }
 
@@ -156,7 +144,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     function displayNumbers(container, numbers) {
         container.innerHTML = '';
-        numbers.forEach(num => {
+        (numbers || []).forEach(num => {
             const ball = document.createElement('span');
             ball.className = 'number-ball';
             ball.textContent = num;
