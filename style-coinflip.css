@@ -1,0 +1,243 @@
+:root {
+    --primary-green: #00f9a4;
+    --dark-background: #0a0a0a;
+    --card-background: #1a1a1a;
+    --text-color: #EAEAEA;
+    --gold-color: #FFD700;
+    --error-color: #ff4d4d;
+}
+
+body {
+    margin: 0;
+    font-family: 'Roboto', sans-serif;
+    background-color: var(--dark-background);
+    color: var(--text-color);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    overflow: hidden;
+}
+
+.game-container {
+    width: 95%;
+    max-width: 450px;
+    background: linear-gradient(145deg, #1e1e1e, #121212);
+    border-radius: 20px;
+    border: 1px solid #333;
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+    padding: 25px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.game-header {
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid #333;
+    padding-bottom: 15px;
+}
+
+.back-to-lobby-btn {
+    text-decoration: none;
+    color: var(--text-color);
+    background-color: #333;
+    padding: 8px 12px;
+    border-radius: 5px;
+    transition: background-color 0.3s;
+    white-space: nowrap;
+}
+
+.back-to-lobby-btn:hover { background-color: #444; }
+
+.game-title {
+    font-family: 'Cinzel', serif;
+    color: var(--primary-green);
+    text-shadow: 0 0 10px rgba(0, 249, 164, 0.7);
+    margin: 0;
+    font-size: 1.8em;
+    text-align: center;
+    width: 100%;
+}
+
+.balance-display {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    background-color: #000;
+    padding: 10px;
+    border-radius: 10px;
+    font-size: 1.5em;
+    font-weight: bold;
+}
+.coin-icon { width: 24px; height: 24px; }
+
+/* --- Animación de la Moneda --- */
+.coin-scene {
+    height: 150px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    perspective: 1000px;
+}
+.coin {
+    width: 120px;
+    height: 120px;
+    position: relative;
+    transform-style: preserve-3d;
+    transform: rotateY(0deg); /* Estado inicial */
+}
+.coin-face {
+    position: absolute;
+    height: 100%;
+    width: 100%;
+    backface-visibility: hidden;
+    border-radius: 50%;
+    background: radial-gradient(circle, #ffec8a, #B8860B);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 0 20px #B8860B;
+}
+.coin-text {
+    font-family: 'Cinzel', serif;
+    font-size: 70px;
+    color: rgba(0, 0, 0, 0.7);
+    text-shadow: 0 2px 2px rgba(255, 255, 255, 0.2);
+}
+.coin-back {
+    transform: rotateY(180deg);
+}
+
+/* Nueva animación con Keyframes */
+@keyframes flip-heads-anim {
+    from { transform: rotateY(0deg); }
+    to { transform: rotateY(1800deg); } /* 5 vueltas completas, termina en cara */
+}
+@keyframes flip-tails-anim {
+    from { transform: rotateY(0deg); }
+    to { transform: rotateY(1980deg); } /* 5.5 vueltas, termina en cruz */
+}
+
+/* Clases para disparar la animación */
+.is-flipping-heads {
+    animation: flip-heads-anim 3s cubic-bezier(0.2, 0.8, 0.5, 1);
+}
+.is-flipping-tails {
+    animation: flip-tails-anim 3s cubic-bezier(0.2, 0.8, 0.5, 1);
+}
+
+
+.result-message {
+    text-align: center;
+    font-size: 1.2em;
+    font-weight: bold;
+    min-height: 25px;
+    text-transform: uppercase;
+    color: var(--primary-green);
+}
+
+.controls-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    background-color: rgba(0,0,0,0.2);
+    padding: 20px;
+    border-radius: 10px;
+}
+
+.choice-selection {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+.choice-btn {
+    padding: 12px;
+    font-size: 1.2em;
+    font-weight: bold;
+    color: var(--text-color);
+    background-color: #333;
+    border: 2px solid #555;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+.choice-btn:hover {
+    border-color: var(--primary-green);
+}
+.choice-btn.selected {
+    background-color: var(--primary-green);
+    color: var(--dark-background);
+    border-color: var(--primary-green);
+    box-shadow: 0 0 15px rgba(0, 249, 164, 0.5);
+}
+
+.bet-control {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    color: #aaa;
+}
+.bet-input-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.bet-input-wrapper button {
+    background-color: #333;
+    color: var(--primary-green);
+    border: none;
+    width: 40px;
+    height: 40px;
+    font-size: 1.8em;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+.bet-input-wrapper button:hover { background-color: #444; }
+
+#bet-input {
+    width: 100px;
+    padding: 8px;
+    font-size: 1.5em;
+    text-align: center;
+    font-weight: bold;
+    background-color: #111;
+    border: 1px solid #444;
+    border-radius: 5px;
+    color: var(--text-color);
+   
+}
+#bet-input::-webkit-outer-spin-button,
+#bet-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.flip-button {
+    padding: 15px;
+    font-size: 1.8em;
+    font-weight: bold;
+    font-family: 'Cinzel', serif;
+    color: var(--dark-background);
+    background-color: var(--primary-green);
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 0 20px rgba(0, 249, 164, 0.4);
+}
+.flip-button:hover:not(:disabled) {
+    transform: scale(1.05);
+    box-shadow: 0 0 30px rgba(0, 249, 164, 0.8);
+}
+.flip-button:disabled {
+    background-color: #555;
+    color: #888;
+    cursor: not-allowed;
+    box-shadow: none;
+}

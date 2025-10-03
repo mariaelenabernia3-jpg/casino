@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KRULE - Cara o Cruz</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;700&family=Cinzel:wght@700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style-coinflip.css">
+</head>
+<body>
+
+    <div class="game-container">
+        <div class="game-header">
+            <a href="lobby.html" class="back-to-lobby-btn">← Volver al Lobby</a>
+            <h1 class="game-title">CARA O CRUZ</h1>
+        </div>
+
+        <div class="balance-display">
+            <span>SALDO:</span>
+            <span id="balance-amount">1000</span>
+            <img src='data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="%23FFD700" stroke="%23B8860B" stroke-width="5"/><text x="50" y="68" font-size="50" text-anchor="middle" fill="%23B8860B">K</text></svg>' class="coin-icon" alt="Moneda">
+        </div>
+
+        <div class="coin-scene">
+            <div id="coin" class="coin">
+                <div class="coin-face coin-front">
+                    <span class="coin-text">K</span>
+                </div>
+                <div class="coin-face coin-back">
+                    <span class="coin-text">♛</span>
+                </div>
+            </div>
+        </div>
+
+        <div id="result-message" class="result-message">
+            Elige tu lado y haz tu apuesta
+        </div>
+        
+        <div class="controls-panel">
+            <div class="choice-selection">
+                <button class="choice-btn" id="heads-button">CARA</button>
+                <button class="choice-btn" id="tails-button">CRUZ</button>
+            </div>
+
+            <div class="bet-control">
+                <label for="bet-amount">APUESTA</label>
+                <div class="bet-input-wrapper">
+                    <button id="decrease-bet">-</button>
+                    <input type="number" id="bet-input" value="10" min="10">
+                    <button id="increase-bet">+</button>
+                </div>
+            </div>
+
+            <button id="flip-button" class="flip-button">LANZAR</button>
+        </div>
+    </div>
+
+    <script src="script-coinflip.js"></script>
+</body>
+</html>
