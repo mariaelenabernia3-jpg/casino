@@ -8,38 +8,11 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@700&family=Cinzel:wght@700&display=swap" rel="stylesheet">
-    
-    <!-- === ESTILOS AÑADIDOS PARA LA PANTALLA DE CARGA === -->
-    <style>
-        #game-loading-screen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: var(--dark-background);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 200;
-            color: var(--primary-green);
-            font-family: 'Cinzel', serif;
-            font-size: 2em;
-            text-shadow: 0 0 15px rgba(0, 249, 164, 0.5);
-        }
-    </style>
 </head>
 <body>
 
-    <!-- === PANTALLA DE CARGA AÑADIDA === -->
-    <!-- El script buscará este ID. Cuando todo cargue, lo ocultará. -->
-    <div id="game-loading-screen">
-        <p>Cargando Lotería...</p>
-    </div>
-
-    <!-- === CONTENEDOR PRINCIPAL AÑADIDO === -->
-    <!-- Este contenedor está oculto por defecto y el script lo mostrará. -->
-    <div id="lottery-container-main" style="display: none;">
+    <!-- El contenedor principal ahora es visible por defecto -->
+    <div id="lottery-container-main">
 
         <a href="lobby.html" class="back-to-lobby-link" title="Volver al Lobby">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
@@ -87,7 +60,6 @@
 
     </div> <!-- Fin del contenedor principal -->
 
-    <!-- El script-lottery.js que te di anteriormente no necesita cambios. -->
     <script src="script-lottery.js"></script>
 </body>
 </html>
